@@ -31,6 +31,10 @@ target_include_directories(burnout3 PRIVATE
     ${XBOXRECOMP_DIR}/templates/runtime
 )
 
+if(TARGET recomp_env)
+    target_compile_definitions(burnout3 PRIVATE BO3_TOOLKIT_ENV_TABLE)
+endif()
+
 if(MSVC)
     target_compile_options(burnout3 PRIVATE /W4 /WX- /O2 /bigobj /MP${BO3_COMPILE_JOBS})
     set_source_files_properties(${RECOMP_GEN_SOURCES} PROPERTIES COMPILE_FLAGS "/w")

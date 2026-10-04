@@ -36,6 +36,15 @@ endif()
 set(XBOXRECOMP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../xboxrecomp" CACHE PATH "Path to xboxrecomp toolkit")
 add_subdirectory(${XBOXRECOMP_DIR} ${CMAKE_BINARY_DIR}/xboxrecomp)
 
+# A toolkit with an environment table (recomp_env) takes this game's defaults
+# for its keys from src/env/recomp_env_game.h: vblank on, the DSP doorbell
+# found from GPSADDR, two pads. Upstream's toolkit reads getenv directly and
+# has no recomp_env target; there main.c's _putenv_s defaults do the job.
+if(TARGET recomp_env)
+    target_compile_definitions(recomp_env PUBLIC RECOMP_ENV_HAVE_GAME_KEYS)
+    target_include_directories(recomp_env PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/env)
+endif()
+
 add_subdirectory(src/game)
 
 # Line-level symbols for the runtime libraries, so a hang sample inside one

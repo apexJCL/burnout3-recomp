@@ -519,8 +519,13 @@ int main(int argc, char **argv)
      * Set either variable yourself to override. */
     if (!getenv("RECOMP_AC97_READY"))
         _putenv_s("RECOMP_AC97_READY", "1");
+#ifndef BO3_TOOLKIT_ENV_TABLE
+    /* With a toolkit environment table the doorbell default is "auto" from
+     * src/env/recomp_env_game.h (the fork's allocator puts the block
+     * elsewhere); setting the variable here would override it. */
     if (!getenv("RECOMP_APU_DSP_ACK"))
         _putenv_s("RECOMP_APU_DSP_ACK", "0x825F8810");
+#endif
     /* The pad. Without the USB controller model there is no way past
      * "Press START"; with it the host's XInput pad (or RECOMP_PAD_SCRIPT /
      * RECOMP_PAD_LIVE) drives the title's own XPP driver. */
