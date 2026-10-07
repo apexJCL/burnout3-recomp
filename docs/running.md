@@ -91,6 +91,11 @@ table:
 | `RECOMP_HDD_DIR` | `saves` | The emulated hard disk (partition images, the profile). Made with its parents. |
 | `RECOMP_STDIO_LOG` | unset | A toolkit key: stdout and stderr go to this file (truncated at start). Proton drops a game's own output, so the bench's `game-stdio.log` and the launchers' `logs\` come from it. |
 
+The packaged launchers set those three below the user-data folder:
+`%LOCALAPPDATA%\Burnout3Takedown` on Windows (`BURNOUT3TAKEDOWN_DATA_DIR`
+names another, for a test that must not touch the player's saves), and
+`~/Games/Burnout3Takedown` on SteamOS (`BURNOUT3_ROOT` at install).
+
 For debugging:
 
 | Variable | Does |
