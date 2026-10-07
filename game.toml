@@ -18,7 +18,7 @@ title_id = 0x4541005B
 sha256 = ["9f497acd82adb8edfb72cc31aeeb35010b45d32b13a3f1fc6540717ff24d13f9"]
 
 [cli]
-commit = "5339e3efea0a059f74ab31cf5ffd07dd9618a369"
+commit = "0f07123d85a5874381170ed7ce6a52ffc69e92be"
 url = "https://github.com/apexJCL/xboxrecomp-cli.git"
 
 [toolkit]
