@@ -33,6 +33,9 @@ target_include_directories(burnout3 PRIVATE
 
 if(TARGET recomp_env)
     target_compile_definitions(burnout3 PRIVATE BO3_TOOLKIT_ENV_TABLE)
+    # main.c reads the game's own keys (RECOMP_GAME_FILES, RECOMP_HDD_DIR)
+    # and RECOMP_STDIO_LOG through the table.
+    target_link_libraries(burnout3 PRIVATE recomp_env)
 endif()
 
 if(MSVC)
@@ -45,8 +48,27 @@ if(MSVC)
         /DYNAMICBASE:NO /FIXED:NO /MAP /DEBUG /STACK:16777216 /OPT:NOICF /OPT:REF)
 endif()
 
-set_target_properties(burnout3 PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY         "${CMAKE_SOURCE_DIR}/bin"
-    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/bin"
-    RUNTIME_OUTPUT_DIRECTORY_DEBUG   "${CMAKE_SOURCE_DIR}/bin"
-)
+# MinGW (llvm-mingw, the Proton build ./burnout3 makes): the 16 MB stack
+# MSVC gets from /STACK above, and a PDB of public symbols beside the exe
+# (lld writes one even without -g) so dbghelp can name the generated function
+# a fault happened in.
+if(MINGW)
+    target_link_options(burnout3 PRIVATE
+        "-Wl,--stack,16777216"
+        "-Wl,--pdb=$<TARGET_FILE_DIR:burnout3>/burnout3.pdb")
+endif()
+
+# bin/ is upstream's layout for its Visual Studio build (README, Setup.cmd).
+# Any other generator puts the exe at the top of its own build dir, where
+# ./burnout3 looks for it: its developer, packaging and bench builds each
+# have one, and a shared bin/ would let one overwrite another's exe.
+if(CMAKE_GENERATOR MATCHES "Visual Studio")
+    set_target_properties(burnout3 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY         "${CMAKE_SOURCE_DIR}/bin"
+        RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/bin"
+        RUNTIME_OUTPUT_DIRECTORY_DEBUG   "${CMAKE_SOURCE_DIR}/bin"
+    )
+else()
+    set_target_properties(burnout3 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+endif()

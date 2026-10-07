@@ -1,6 +1,6 @@
 /*
- * recomp_env_game.h - Burnout 3's defaults for the fork toolkit's environment
- * table (xboxrecomp src/platform/recomp_env.h includes this file when
+ * recomp_env_game.h - Burnout 3's keys and defaults for the fork toolkit's
+ * environment table (xboxrecomp src/platform/recomp_env.h includes this file when
  * RECOMP_ENV_HAVE_GAME_KEYS is defined; CMakeLists.txt sets it on the
  * recomp_env target when the toolkit has one). Upstream's toolkit reads raw
  * getenv and has no such target, so there main.c's _putenv_s defaults apply.
@@ -16,6 +16,14 @@
  */
 #ifndef RECOMP_ENV_GAME_H
 #define RECOMP_ENV_GAME_H
+
+/* This game's own keys, added to the toolkit's table (same row format:
+ * X(ID, TIER, NAME, LEGACY, HELP); rows in docs/running.md). The packaged
+ * launchers set both: they start the game from its logs folder, so the dump
+ * and the emulated hard disk cannot be found from the working directory. */
+#define RECOMP_ENV_GAME_KEYS(X) \
+    X(GAME_FILES, CONFIG, "RECOMP_GAME_FILES", NULL, "game files directory (default: Burnout 3 Takedown in the working directory)") \
+    X(HDD_DIR,    CONFIG, "RECOMP_HDD_DIR",    NULL, "emulated hard disk: partition images, saves (default: saves in the working directory)")
 
 #define RECOMP_ENV_GAME_DEFAULTS(D) \
     D(VBLANK,      "1") \

@@ -1,0 +1,4 @@
+# Burnout 3 has no enhancements yet: this build runs at stock resolution and
+# frame rate, and reads no key from this file. The launcher copies it to
+# config/enhance.toml the first time, as it does for every xboxrecomp game,
+# so a later version's options show up beside it.

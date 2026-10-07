@@ -175,6 +175,45 @@ the step says Git Bash.
 moment ago isn't found until you open a new window. The build needs the
 64-bit generator (`-A x64`).
 
+### Building with ./burnout3 (xboxrecomp-cli)
+
+This fork also builds through
+[xboxrecomp-cli](https://github.com/apexJCL/xboxrecomp-cli), the command line
+the [BLiNX 2 recomp](https://github.com/apexJCL/blinx2-recomp) uses. It is the
+path this fork tests: a Windows x86-64 exe cross-compiled with llvm-mingw
+(from macOS or Linux as well as Windows) and run under Proton on Linux, against
+the toolkit fork (`apexJCL/xboxrecomp`) at the commit `game.toml` pins.
+Upstream's `Setup.cmd`, `regen.sh` and Visual Studio build above are unchanged.
+
+You need [uv](https://docs.astral.sh/uv/), git and Python 3. `./burnout3`
+(`burnout3.cmd` on Windows) finds or clones the CLI at its pinned commit and
+runs it; `game.toml` holds everything it knows about this game.
+
+```
+./burnout3 setup        # the tools venv (.venv), llvm-mingw, the toolkit at its pin
+./burnout3 doctor       # what this host has
+./burnout3 analyze      # xbe_parser, disasm, func_id, abi_analysis -> build/xr/
+./burnout3 recomp       # the C, into src/game/recomp/gen/ (the same files regen.sh writes)
+./burnout3 build        # build-win/burnout3.exe (windows is the only target)
+./burnout3 bench ...    # build and run it under Proton on a Linux host (docs/running.md)
+./burnout3 package windows   # dist/: an installer folder for Windows
+./burnout3 package steamos   # dist/: one .tar for a SteamOS-like Linux PC (Proton through umu-run)
+```
+
+The disc is read from `Burnout 3 Takedown/`, as above; nothing is written
+into it. A `../xboxrecomp` checkout beside this one is used as it is
+(`XBOXRECOMP_DIR` names another), like a `../xboxrecomp-cli` checkout for the
+CLI (`XBOXRECOMP_CLI_DIR`).
+
+`./burnout3 package` (with no target: `windows`) builds a stock exe in its own
+`build-pkg-win/` and wraps it with a launcher, your game files and a README
+into a private bundle in `dist/`. The bundle holds your copy of the game:
+it is for your own machines, never to share. The launcher renders through
+Direct3D 11 (`RECOMP_PB_BACKEND=d3d11`); settings and saves live outside the
+program, in `%LOCALAPPDATA%\Burnout3Takedown` on Windows and
+`~/Games/Burnout3Takedown` on Linux, and survive updates. The bundle's
+`README.txt` has the install steps.
+
 ## Usage
 
 ```

@@ -52,3 +52,18 @@ Desktop.ini
 .DS_Store
 *.tmp
 *.bak
+
+# ./burnout3 (xboxrecomp-cli): its toolchain, venvs, build trees, bundles,
+# the generation key and marker, bench logs and local bench settings.
+/.venv-ghidra/
+/external/
+/third_party/
+/build-*/
+/dist/
+/.ruff_cache/
+/bench-logs
+/build-logs/
+src/game/recomp/gen.key.json
+src/game/recomp/.gen-regenerating
+/scripts/bench.env
+/.xbr-pin

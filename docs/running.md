@@ -10,6 +10,12 @@ Run it from the repo folder. It reads the disc from `Burnout 3 Takedown\` and
 keeps the emulated hard disk (profile, cache partitions) in `saves\`. Delete
 `saves\` to go through first boot again.
 
+Built by `./burnout3 build` (llvm-mingw, the Proton path) the exe is
+`build-win\burnout3.exe` instead; only upstream's Visual Studio build writes
+`bin\`. On the fork toolkit (an environment table), `RECOMP_GAME_FILES` and
+`RECOMP_HDD_DIR` move the two folders, so the exe can run from anywhere: the
+packaged launchers start it from its logs folder and set both.
+
 - **Windowed** by default. The title bar reads
   `Burnout 3: Takedown | FPS: 14 | draws: 212`. The title comes from the XBE
   certificate; draws are the draw calls in the last frame.
@@ -73,7 +79,17 @@ Defaults that `main.c` sets, which you can override:
 | `RECOMP_FB_WINDOW` | `1` unless `--headless` | The window. |
 | `RECOMP_USB` / `RECOMP_USB_PADS` | `1` / `2` | The USB host and pad count (1–4). Split-screen modes are greyed out with one pad. |
 | `RECOMP_AC97_READY` | `1` | DirectSound refuses to start until the AC'97 codec reports ready, and RenderWare won't start without audio. |
-| `RECOMP_APU_DSP_ACK` | `0x825F8810` | The DSP doorbell DirectSound waits on; [boot.md](boot.md) #5. |
+| `RECOMP_APU_DSP_ACK` | `0x825F8810` | The DSP doorbell DirectSound waits on; [boot.md](boot.md) #5. On the fork toolkit the default is `auto` (`src/env/recomp_env_game.h`). |
+
+On the fork toolkit (`xboxrecomp` with the `recomp_env` table, which
+`./burnout3` builds against), the game also reads its own keys, through the
+table:
+
+| Variable | Default | Why |
+|---|---|---|
+| `RECOMP_GAME_FILES` | `Burnout 3 Takedown` | The unpacked disc; the XBE is `<this>\default.xbe` unless a path is given on the command line. |
+| `RECOMP_HDD_DIR` | `saves` | The emulated hard disk (partition images, the profile). Made with its parents. |
+| `RECOMP_STDIO_LOG` | unset | A toolkit key: stdout and stderr go to this file (truncated at start). Proton drops a game's own output, so the bench's `game-stdio.log` and the launchers' `logs\` come from it. |
 
 For debugging:
 
@@ -109,3 +125,49 @@ touch runs/mp/rec.flag          # start dumping every flip
 ```
 
 Then `ffmpeg -framerate 30 -i runs/mp/f%05d.bmp -pix_fmt yuv420p mp.mp4`.
+
+## On the Proton bench
+
+`./burnout3 bench` builds the Windows exe on a Linux host and runs it under
+Proton there, over ssh (`./burnout3 bench --help`). Copy
+`scripts/bench.env.example` to `scripts/bench.env` and set the host. The dump
+already on the host (`BENCH_GAME_FILES`) is linked into the host tree as
+`Burnout 3 Takedown`; nothing is copied into it.
+
+```
+./burnout3 bench setup                 # once per host
+./burnout3 bench sync --game-files     # this tree, the toolkit and the CLI; the dump link
+./burnout3 bench build                 # build-win/burnout3.exe on the host
+```
+
+Each run gets `bench-logs/<stamp>/` on the host, pulled back here:
+`game-stdio.log` (the game's output, through `RECOMP_STDIO_LOG`),
+`run-info.txt` (the exe's sha256 and the commits it was built from),
+`exit-code` and Proton's logs. A `[FAULT]` line fails the run. Give runs a
+limit with `BENCH_TIMEOUT` (SIGINT; exit 124 is a run that reached it), not
+`--seconds`. `RECOMP_SAVE_DIR=@run` starts each run with an empty hard disk
+in its log dir, and `RECOMP_FB_DUMP=@run` dumps the CPU backend's frames to
+the run's `frames/` on the host. "Press START" appears about 76 s after
+launch, so the scripts press START at 85 s.
+
+```
+# boot: the intros, then Press START over the attract movie
+BENCH_ENV="RECOMP_FB_DUMP=@run RECOMP_DEBUG=fb_dump_flips=60 RECOMP_SAVE_DIR=@run" \
+BENCH_TIMEOUT=180 ./burnout3 bench run --headless
+
+# menu: START, then A every 15 s through the profile screens
+BENCH_ENV="RECOMP_PAD_SCRIPT=85000:start:1200,100000:a:400,115000:a:400,130000:a:400,145000:a:400 RECOMP_FB_DUMP=@run RECOMP_DEBUG=fb_dump_flips=60 RECOMP_SAVE_DIR=@run" \
+BENCH_TIMEOUT=240 ./burnout3 bench run --headless
+
+# race: the profile flow into a race, then RT held from 270 s
+BENCH_ENV="RECOMP_PAD_SCRIPT=85000:start:1200,100000:a:400,115000:a:400,130000:up:300,145000:a:400,160000:a:400,175000:a:400,190000:a:400,205000:a:400,220000:a:400,235000:a:400,250000:a:400,270000:rt:600000 RECOMP_FB_DUMP=@run RECOMP_DEBUG=fb_dump_flips=150 RECOMP_SAVE_DIR=@run" \
+BENCH_TIMEOUT=900 ./burnout3 bench run --headless
+```
+
+The CPU backend dumps at most 200 frames a run (`fb_dump_flips` spaces
+them: about 60 flips a second in the front end). For the D3D11 renderer add
+`RECOMP_PB_BACKEND=d3d11 RECOMP_TRACE=flip` to `BENCH_ENV` and set
+`BENCH_FRAMES=1` (its frames, every 60th present, go to the run's
+`frames/`). That backend opens its own window. `RECOMP_TRACE=flip` gives the
+run's `flips:` count and the bench's check that every present shows the
+surface the game drew; without it both read "not checked".

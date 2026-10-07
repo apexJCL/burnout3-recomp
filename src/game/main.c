@@ -40,6 +40,9 @@
 #include "kernel.h"
 #include "xbox_memory_layout.h"
 #include "usb/ohci.h"
+#ifdef BO3_TOOLKIT_ENV_TABLE
+#include "platform/recomp_env.h"
+#endif
 
 /* RECOMP_TLS is required: the runtime defines these thread-local, and a plain
  * extern resolves to the image's TLS template rather than this thread's copy,
@@ -55,6 +58,48 @@ int recomp_dispatch_init(void);
 #define BO3_XBE_DEFAULT  "Burnout 3 Takedown\\default.xbe"
 #define BO3_GAME_DIR     "Burnout 3 Takedown"
 #define BO3_SAVE_DIR     "saves"
+
+#ifdef BO3_TOOLKIT_ENV_TABLE
+/* RECOMP_STDIO_LOG=<path>: stdout and stderr into a file. Proton drops a
+ * game's stdio whatever its subsystem, so the bench's game-stdio.log, its
+ * fault check and a packaged launcher's logs/ all read this file. Truncate
+ * it, then reopen both streams in append mode so their writes interleave
+ * instead of overwriting each other (a GUI-subsystem exe has no stderr
+ * descriptor to dup onto). Before anything prints. */
+static void stdio_log_setup(void)
+{
+    const char *log = recomp_env(RENV_STDIO_LOG);
+    FILE *trunc;
+
+    if (!log || !*log)
+        return;
+    trunc = fopen(log, "w");
+    if (trunc)
+        fclose(trunc);
+    if (freopen(log, "a", stdout) && !freopen(log, "a", stderr))
+        printf("[BOOT] RECOMP_STDIO_LOG: stderr NOT redirected\n");
+}
+
+/* CreateDirectoryA makes one level; RECOMP_HDD_DIR may name a folder whose
+ * parents do not exist yet (a fresh install's data root). */
+static void make_dirs(const char *path)
+{
+    char buf[MAX_PATH];
+    char *p;
+
+    if (snprintf(buf, sizeof buf, "%s", path) >= (int)sizeof buf)
+        return;
+    for (p = buf; *p; p++) {
+        if ((*p == '\\' || *p == '/') && p > buf && p[-1] != ':') {
+            char c = *p;
+            *p = '\0';
+            CreateDirectoryA(buf, NULL);
+            *p = c;
+        }
+    }
+    CreateDirectoryA(buf, NULL);
+}
+#endif
 
 static BOOL load_xbe(const char *path, void **out_data, size_t *out_size)
 {
@@ -477,6 +522,32 @@ int main(int argc, char **argv)
     int headless = 0, i;
     void *xbe_data = NULL;
     size_t xbe_size = 0;
+    const char *game_dir = BO3_GAME_DIR, *save_dir = BO3_SAVE_DIR;
+#ifdef BO3_TOOLKIT_ENV_TABLE
+    char xbe_buf[MAX_PATH];
+
+    stdio_log_setup();
+    /* RECOMP_GAME_FILES and RECOMP_HDD_DIR: the packaged launchers start the
+     * game from its logs folder and name the dump and the emulated hard disk
+     * here, so an install keeps its saves outside the program files and
+     * outside the Wine prefix. Unset, the folders are upstream's, relative
+     * to the working directory. */
+    {
+        const char *g = recomp_env(RENV_GAME_FILES);
+        const char *h = recomp_env(RENV_HDD_DIR);
+        if (g && *g) {
+            game_dir = g;
+            if (snprintf(xbe_buf, sizeof xbe_buf, "%s\\default.xbe", g)
+                >= (int)sizeof xbe_buf) {
+                fprintf(stderr, "RECOMP_GAME_FILES is too long: %s\n", g);
+                return 1;
+            }
+            path = xbe_buf;
+        }
+        if (h && *h)
+            save_dir = h;
+    }
+#endif
 
     for (i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--headless"))
@@ -495,6 +566,11 @@ int main(int argc, char **argv)
 
     setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);
+#ifdef BO3_TOOLKIT_ENV_TABLE
+    /* Deprecated names and bad keys found when the environment was read:
+     * held until stdio is where it will stay, so they land in the log. */
+    recomp_env_flush_notes();
+#endif
     /* Symbols up front: at fault time SymInitialize would have to allocate
      * inside a process that is already in a bad way. */
     SymSetOptions(SYMOPT_DEFERRED_LOADS | SYMOPT_UNDNAME | SYMOPT_LOAD_LINES);
@@ -547,6 +623,12 @@ int main(int argc, char **argv)
         _putenv_s("RECOMP_FB_WINDOW", "1");
     if (record)
         record_start(record, seconds);
+#ifdef BO3_TOOLKIT_ENV_TABLE
+    /* The table was read at the top of main (RECOMP_STDIO_LOG, the folders);
+     * re-read it so the defaults set above reach it. Without this RECOMP_USB
+     * stays off and no pad (host or script) ever gets past Press START. */
+    recomp_env_reload();
+#endif
 
     if (!load_xbe(path, &xbe_data, &xbe_size))
         return 1;
@@ -581,8 +663,13 @@ int main(int argc, char **argv)
     xbox_kernel_init();
     /* The HDD partitions live in saves\; without the folder Partition1.img
      * cannot be created and XAPI quick-reboots at once (docs/boot.md #2). */
-    CreateDirectoryA(BO3_SAVE_DIR, NULL);
-    xbox_path_init(BO3_GAME_DIR, BO3_SAVE_DIR);
+#ifdef BO3_TOOLKIT_ENV_TABLE
+    make_dirs(save_dir);
+    printf("[BOOT] game files: %s; hard disk: %s\n", game_dir, save_dir);
+#else
+    CreateDirectoryA(save_dir, NULL);
+#endif
+    xbox_path_init(game_dir, save_dir);
     xbox_kernel_bridge_init();
 
     g_esp = XBOX_STACK_TOP;
