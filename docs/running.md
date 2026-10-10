@@ -235,13 +235,14 @@ after the last A and held to the end of the run. It lets the intros play rather 
 `RECOMP_SAVE_DIR=@run` starts from an empty save, where this route never
 reaches the profile. Keep the save on the bench host outside every synced
 tree (a `bench sync` deletes what the tree lacks), copy it to a new folder
-for each run (the game writes to it), and name that folder instead:
+for each run (the game writes to it) under `/tmp`, where it is easy to
+clear afterwards, and name that folder instead:
 
 ```
 rsync -a /path/to/workspace/runs/fixtures/b3-save <host>:b3-fixtures/   # once
-S=gate-$(date +%Y%m%d-%H%M%S)
-ssh <host> "mkdir -p ~/b3-saves/$S && cp -r ~/b3-fixtures/b3-save/UDATA ~/b3-fixtures/b3-save/TDATA ~/b3-saves/$S/"
-BENCH_ENV="RECOMP_PAD_SCRIPT=$(python3 scripts/race_gate.py --pad-script) RECOMP_SAVE_DIR=Z:/home/<user>/b3-saves/$S RECOMP_PB_BACKEND=d3d11 RECOMP_TRACE=flip" \
+S=b3-save-$(date +%Y%m%d-%H%M%S)
+ssh <host> "mkdir -p /tmp/$S && cp -r ~/b3-fixtures/b3-save/UDATA ~/b3-fixtures/b3-save/TDATA /tmp/$S/"
+BENCH_ENV="RECOMP_PAD_SCRIPT=$(python3 scripts/race_gate.py --pad-script) RECOMP_SAVE_DIR=Z:/tmp/$S RECOMP_PB_BACKEND=d3d11 RECOMP_TRACE=flip" \
 BENCH_FRAMES=1 BENCH_TIMEOUT=490 ./burnout3 bench run --headless
 python3 scripts/race_gate.py --check bench-logs/<stamp>
 ```
