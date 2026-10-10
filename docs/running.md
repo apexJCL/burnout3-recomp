@@ -169,6 +169,91 @@ RECOMP_FB_DUMP_FLIPS=150 RECOMP_TRACE=flip RECOMP_PAD_SCRIPT=... \
   ./build/burnout3 --headless --seconds 900
 ```
 
+## The race gate
+
+`scripts/race_gate.py` does that session by itself, from a profile save: it
+copies the save's `UDATA` and `TDATA` into the run's own save dir (the save
+is only read, and never belongs in the repo), runs the game headless with a
+live pad file, and presses through Single Event into a race with the
+defaults. Each press waits for its screen: the file the screen opens where
+there is one (`Titles30.xmv`, `_FEMain.xmv`, `SaveMeta.xbx`, `Profile 1`,
+`CAR1.bgv`, `crash1.rws`, `ident0.awd`), later in the log than the press; a
+short settle with the flip count still moving where there is none. A press
+counts once the pad reports it (`PAD: live "<press>"`), and a press a
+fading screen dropped is repeated, unless a later screen's file has already
+opened. RT goes down once the race's sound bank loads and stays down for
+60 s (`--mode long`: 600 s).
+
+The save comes from `--fixture` or `$RACE_GATE_FIXTURE`. Runs go to `--out`,
+by default the `runs/` folder of a workspace above the checkout; the script
+refuses a folder inside the checkout.
+
+```
+python3 scripts/race_gate.py --fixture /path/to/workspace/runs/fixtures/b3-save \
+    --out /path/to/workspace/runs/gate
+python3 scripts/race_gate.py --check /path/to/workspace/runs/gate/<stamp>-race-fast
+```
+
+It passes when:
+
+- the race is reached and a frame is dumped after it;
+- there is no `[FAULT]` or `[CRASH]` line;
+- the flip count never stops for 5 s in the race, and the race runs at
+  10 flips/s or more (`--min-race-fps`). A Mac races at 50 to 75, D3D11
+  under Proton at about 15, and the CPU backend under Proton at about 3
+  (use `--min-race-fps 1` there);
+- SIGINT stops the game (a hung game needs SIGTERM or SIGKILL);
+- the APU's WAV tap grows by at least half the drive's length between race
+  start and the end of the drive (about all of it on an idle host, three
+  quarters on a loaded one), and that stretch is not silent.
+
+Rates and durations are on the flip trace's clock (`[GPU] flip N T ms`), in
+a driven run and a bench run alike. On a Mac the whole fast run takes about
+105 s. The route, with the profile loaded:
+
+```
+intros -> START on Titles30 -> START ("Press START") -> A (LOAD PROFILE)
+-> A (Profile 1) -> A (CONTINUE) -> UP 600 ms, DOWN 15 ms (Single Event)
+-> A (RACE) -> A (the options: random region and track, 5 rivals)
+-> A (the first car) -> the race; RT held
+```
+
+The menu's d-pad repeat counts frames, so a hold that is one step at 30 fps
+is four on a fast host: `--nav-ms` sets the DOWN hold (15 ms on the Mac).
+
+### The race gate on the Proton bench
+
+Under Proton it passes on D3D11 (race about 13 flips/s) and, with
+`--min-race-fps 1`, on the CPU backend (about 3). Nothing can follow the log
+while the bench runs the game, so `--pad-script` prints the same route as a
+fixed `RECOMP_PAD_SCRIPT`: START at 85 s (`--start-ms`), a press every 15 s
+(`--gap-ms`), DOWN held 50 ms (one step in D3D11's menus at about 130
+flips/s; the CPU backend's run about 15, so give it `--nav-ms 200`), RT 30 s
+after the last A and held to the end of the run. It lets the intros play rather than skip them. It prints the
+`BENCH_TIMEOUT` the run needs to stderr (490 s for the fast mode).
+
+`RECOMP_SAVE_DIR=@run` starts from an empty save, where this route never
+reaches the profile. Keep the save on the bench host outside every synced
+tree (a `bench sync` deletes what the tree lacks), copy it to a new folder
+for each run (the game writes to it), and name that folder instead:
+
+```
+rsync -a /path/to/workspace/runs/fixtures/b3-save <host>:b3-fixtures/   # once
+S=gate-$(date +%Y%m%d-%H%M%S)
+ssh <host> "mkdir -p ~/b3-saves/$S && cp -r ~/b3-fixtures/b3-save/UDATA ~/b3-fixtures/b3-save/TDATA ~/b3-saves/$S/"
+BENCH_ENV="RECOMP_PAD_SCRIPT=$(python3 scripts/race_gate.py --pad-script) RECOMP_SAVE_DIR=Z:/home/<user>/b3-saves/$S RECOMP_PB_BACKEND=d3d11 RECOMP_TRACE=flip" \
+BENCH_FRAMES=1 BENCH_TIMEOUT=490 ./burnout3 bench run --headless
+python3 scripts/race_gate.py --check bench-logs/<stamp>
+```
+
+The bench run needs `RECOMP_TRACE=flip`: without flip lines `--check` fails.
+`--check` reads the run from its log alone: the race starts at the first
+`ident0.awd` after `crash1.rws` and ends at the last flip, and must last the
+drive (`--mode`, `--drive-secs`). It reads `exit-code`: 124 is the run
+reaching `BENCH_TIMEOUT` and stopping on its SIGINT, which is how this run
+ends, and 0 is the game ending by itself; 137 (the game ignored SIGINT and
+was killed), any other code, or no file fails. There is no WAV tap there, so the audio is not checked.
+
 ## On the Proton bench
 
 `./burnout3 bench` builds the Windows exe on a Linux host and runs it under
