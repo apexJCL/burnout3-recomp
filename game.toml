@@ -43,7 +43,9 @@ analysis_json = "build/xr/analysis.json"
 seeds = ["config/seed_functions.json"]
 # The toolkit's icall_feedback database is BLiNX 2's; regen.sh has none.
 icall_seeds = false
-spin_waits = ""
+# The KickOff spin waits up to a vblank behind the toolkit's flip hold;
+# lowered, it yields the guest CPU instead of holding it.
+spin_waits = "config/spin_waits.json"
 exclude_manual = "src/game/recomp/recomp_manual.c"
 split = 1000
 names_hooks = []

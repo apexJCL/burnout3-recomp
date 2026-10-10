@@ -67,7 +67,8 @@ STALL_SECS = 5.0
 
 # The race's flips per second (flip count over the flip trace's own clock),
 # below which the run fails. Mac Metal raced at 52 and 74 flips/s (the
-# first two passing gate runs); D3D11 under Proton at about 15. Ten is a
+# first two passing gate runs; held to the vblank, about 56); D3D11 under
+# Proton at about 13 to 15. Ten is a
 # fifth of the slowest Mac run and below the Proton one, so it trips on a
 # game crawling at a few frames a second, not on a slow host. The CPU
 # backend under Proton races at about 3: pass --min-race-fps 1 there.
@@ -787,12 +788,15 @@ PAD_STEPS = [
     (9, "a:400"),  # -> the race loads
 ]
 
-# The Proton bench's timings (docs/running.md): "Press START" about 76 s
-# after launch, so START at 85 s, then a screen every 15 s. The menu's d-pad
-# repeat counts frames: D3D11 there flips about 130 a second, where a 300 ms
-# hold moved three entries (run 20261010-100737), so 50 ms (about 6 frames).
-# The CPU backend's menus flip about 15 a second: --nav-ms 200 there.
-PAD_START_MS, PAD_GAP_MS, PAD_NAV_MS, PAD_RACE_MS = 85000, 15000, 50, 30000
+# The Proton bench's timings (docs/running.md): "Press START" about 89 s
+# after launch now that presents are held to the 60 Hz vblank (the intros
+# play at their own length; it was 76 s when D3D11 flipped them faster), so
+# START at 100 s, then a screen every 15 s. The menu's d-pad repeat counts
+# frames: unpaced D3D11 flipped about 130 a second there, where a 300 ms hold
+# moved three entries (run 20261010-100737); at 60 a second 50 ms (3 frames)
+# moves one (run 20261010-113724). The CPU backend's menus flip about 15 a
+# second: --nav-ms 200 there.
+PAD_START_MS, PAD_GAP_MS, PAD_NAV_MS, PAD_RACE_MS = 100000, 15000, 50, 30000
 # From the last A to the race's first flip under Proton: about 40 s on
 # D3D11, up to 150 s on the CPU backend. RT is held through it and the limit
 # leaves the whole drive after it.
