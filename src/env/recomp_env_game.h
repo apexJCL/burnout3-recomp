@@ -9,10 +9,15 @@
  * is set in the environment.
  *   VBLANK      D3D's present waits on the vblank event the GPU ISR (vector 3)
  *               signals; without vblank delivery the boot stops after flip 1.
- *   APU_DSP_ACK auto: the DSOUND GP doorbell is SGE[0] of NV_PAPU_GPSADDR
- *               + 0x810, wherever the contiguous allocator put it (the
- *               upstream allocator gave 0x825F8810, the fork's 0x80BBC810).
+ *   GUEST_CPUS  one: every guest thread on one host core, as on the console
+ *               (the toolkit's own default too; stated here so this game's
+ *               pinning does not depend on it). RECOMP_GUEST_CPUS=all is
+ *               the A/B.
  *   USB_PADS    two pads: the split-screen modes need a second controller.
+ * The DSOUND GP doorbell ack (apu_dsp_ack=auto: SGE[0] of NV_PAPU_GPSADDR
+ * + 0x810, wherever the contiguous allocator put it; the upstream allocator
+ * gave 0x825F8810, the fork's 0x80BBC810) was a default here until the fork
+ * toolkit made `auto` its own default.
  */
 #ifndef RECOMP_ENV_GAME_H
 #define RECOMP_ENV_GAME_H
@@ -26,8 +31,8 @@
     X(HDD_DIR,    CONFIG, "RECOMP_HDD_DIR",    NULL, "emulated hard disk: partition images, saves (default: saves in the working directory)")
 
 #define RECOMP_ENV_GAME_DEFAULTS(D) \
-    D(VBLANK,      "1") \
-    D(APU_DSP_ACK, "auto") \
-    D(USB_PADS,    "2")
+    D(VBLANK,     "1") \
+    D(GUEST_CPUS, "one") \
+    D(USB_PADS,   "2")
 
 #endif /* RECOMP_ENV_GAME_H */
