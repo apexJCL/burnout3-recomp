@@ -17,8 +17,15 @@ add_executable(burnout3
 
 target_link_libraries(burnout3 PRIVATE
     xbox_kernel xbox_d3d8 xbox_dsound xbox_input xbox_usb xbox_video xbox_apu
-    kernel32 user32 gdi32 dbghelp
 )
+
+# Windows SDK import libraries (dbghelp names the generated function a fault
+# happened in). Other hosts get SDL2, the Metal frameworks and OpenSSL through
+# the toolkit targets, and the fault handler uses dladdr, so the executable
+# must stay unstripped there.
+if(WIN32)
+    target_link_libraries(burnout3 PRIVATE kernel32 user32 gdi32 dbghelp)
+endif()
 
 target_include_directories(burnout3 PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -56,6 +63,14 @@ if(MINGW)
     target_link_options(burnout3 PRIVATE
         "-Wl,--stack,16777216"
         "-Wl,--pdb=$<TARGET_FILE_DIR:burnout3>/burnout3.pdb")
+endif()
+
+# The lifter writes compares as `if ((a == b))`, which clang flags as
+# -Wparentheses-equality once per site: tens of thousands of warnings a full
+# build, burying the real ones. Generated code only.
+if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+    set_property(SOURCE ${RECOMP_GEN_SOURCES} APPEND PROPERTY
+        COMPILE_OPTIONS -Wno-parentheses-equality)
 endif()
 
 # bin/ is upstream's layout for its Visual Studio build (README, Setup.cmd).

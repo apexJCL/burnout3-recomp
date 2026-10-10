@@ -131,6 +131,44 @@ touch runs/mp/rec.flag          # start dumping every flip
 
 Then `ffmpeg -framerate 30 -i runs/mp/f%05d.bmp -pix_fmt yuv420p mp.mp4`.
 
+## On a Mac (Metal)
+
+The same `main.c` builds on macOS arm64 with Apple clang, against the fork
+toolkit, and plays on the Metal backend:
+
+```
+export DEVELOPER_DIR=/Library/Developer/CommandLineTools
+./burnout3 build macos          # build/burnout3
+./build/burnout3                # a window; --headless for none
+```
+
+What differs from Windows:
+
+- `RECOMP_PB_BACKEND` defaults to `metal` (the CPU rasteriser runs a race at
+  one or two fps); `RECOMP_PB_BACKEND=cpu` asks for it anyway.
+- `RECOMP_TITLE_KEVENTS` defaults to `1`: D3D8 builds the KEVENT its vblank
+  DPC sets without `KeInitializeEvent`, and on POSIX the bridge needs a host
+  event for it. An explicit value in the environment wins.
+- Windowed, the toolkit's SDL host runs the guest on its own thread; the
+  window's controllers are the pads (`RECOMP_KEYBOARD=1` adds the keyboard as
+  pad 1). Headless (`--headless`, or `RECOMP_HEADLESS=1`) the guest runs on
+  the main thread with no window; `RECOMP_PAD_SCRIPT` works as on Windows.
+- `--seconds N` ends the run on every host, recording or not.
+- A fault prints the same `[FAULT]` report from a SIGBUS/SIGSEGV handler
+  (`dladdr` names the generated function; keep the executable unstripped).
+- `RECOMP_HANG_WATCHDOG` and `BO3_TRAP_NAN` are Windows-only (they need Win32
+  thread contexts); `RECOMP_WATCHDOG_SECS` dumps the guest stack on every
+  host. `RECOMP_FB_DUMP` works on Metal too.
+- Sound goes through SDL; `SDL_AUDIODRIVER=dummy` runs silent, which is how
+  the scripted runs are made. `RECOMP_HDD_DIR` moves the emulated hard disk,
+  so a run can start from an empty one:
+
+```
+SDL_AUDIODRIVER=dummy RECOMP_HDD_DIR=runs/r1/saves RECOMP_FB_DUMP=runs/r1/f \
+RECOMP_FB_DUMP_FLIPS=150 RECOMP_TRACE=flip RECOMP_PAD_SCRIPT=... \
+  ./build/burnout3 --headless --seconds 900
+```
+
 ## On the Proton bench
 
 `./burnout3 bench` builds the Windows exe on a Linux host and runs it under

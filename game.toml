@@ -57,7 +57,8 @@ extra_sections = []
 
 [build]
 exe = "burnout3"
-targets = ["windows"]
+# macos: the developer build on a Mac (Metal); there is no macOS bundle.
+targets = ["windows", "macos"]
 windows_dir = "build-win"
 macos_dir = "build"
 # No enhancements layer: the build every Proton run of Burnout 3 used.
@@ -81,13 +82,18 @@ presets = []
 json = ""
 
 [package]
-# Windows and the SteamOS-like Linux PC: the only build target is windows.
-# Not "Burnout3": the launcher <app>.exe sits beside burnout3.exe, and
+# Windows, the SteamOS-like Linux PC (both from the windows build) and the
+# Mac. Not "Burnout3": the launcher <app>.exe sits beside burnout3.exe, and
 # Windows file names ignore case.
 app = "Burnout3Takedown"
 product = "burnout3-recomp"
-targets = ["windows", "steamos"]
+targets = ["windows", "steamos", "macos"]
+# macos: Burnout3Takedown.app in a DMG, with the Homebrew dylibs the Mac build
+# links (otool -L build/burnout3) bundled; the launcher and Info.plist are
+# the game's own, in packaging/macos/.
+brew = ["sdl2", "openssl", "libepoxy"]
 content = "packaging"
+templates = "packaging"
 icon = "xbe"
 
 [bench]
