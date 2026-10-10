@@ -55,4 +55,4 @@ and per-flip frame dumps.
 - Sound effects (menu select, turbo, engines) played as fizz and noise. The
   game loads them into its heap, whose physical addresses are also handed out
   as contiguous memory, and the APU read the contiguous copy. The toolkit's APU
-  now reads RAM for any page the game named through MmGetPhysicalAddress.
+  now reads RAM for any heap page the game named through MmGetPhysicalAddress.
