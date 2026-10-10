@@ -480,13 +480,13 @@ def test_pad_script_timeline():
     text, limit = race_gate.pad_script(60)
     steps = [e.split(":") for e in text.split(",")]
     times = [int(e[0]) for e in steps]
-    assert times == sorted(times) and times[0] == 85000
-    assert ["160000", "down", "50"] in steps
-    assert steps[-1][:2] == ["250000", "rt"]
+    assert times == sorted(times) and times[0] == 100000
+    assert ["175000", "down", "50"] in steps
+    assert steps[-1][:2] == ["265000", "rt"]
     # RT is held past the limit the run needs: the whole drive after the
     # load's slack.
-    assert limit == 250 + race_gate.PAD_LOAD_SLACK_S + 60
-    assert 250000 + int(steps[-1][2]) > limit * 1000
+    assert limit == 265 + race_gate.PAD_LOAD_SLACK_S + 60
+    assert 265000 + int(steps[-1][2]) > limit * 1000
     assert text.count(":a:400") == 7 and text.count(":start:1200") == 1
 
 

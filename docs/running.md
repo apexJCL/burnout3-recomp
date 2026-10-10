@@ -199,8 +199,8 @@ It passes when:
 - the race is reached and a frame is dumped after it;
 - there is no `[FAULT]` or `[CRASH]` line;
 - the flip count never stops for 5 s in the race, and the race runs at
-  10 flips/s or more (`--min-race-fps`). A Mac races at 50 to 75, D3D11
-  under Proton at about 15, and the CPU backend under Proton at about 3
+  10 flips/s or more (`--min-race-fps`). A Mac races at about 55 to 75, D3D11
+  under Proton at about 13 to 15, and the CPU backend under Proton at about 3
   (use `--min-race-fps 1` there);
 - SIGINT stops the game (a hung game needs SIGTERM or SIGKILL);
 - the APU's WAV tap grows by at least half the drive's length between race
@@ -226,11 +226,11 @@ is four on a fast host: `--nav-ms` sets the DOWN hold (15 ms on the Mac).
 Under Proton it passes on D3D11 (race about 13 flips/s) and, with
 `--min-race-fps 1`, on the CPU backend (about 3). Nothing can follow the log
 while the bench runs the game, so `--pad-script` prints the same route as a
-fixed `RECOMP_PAD_SCRIPT`: START at 85 s (`--start-ms`), a press every 15 s
-(`--gap-ms`), DOWN held 50 ms (one step in D3D11's menus at about 130
+fixed `RECOMP_PAD_SCRIPT`: START at 100 s (`--start-ms`), a press every 15 s
+(`--gap-ms`), DOWN held 50 ms (one step in D3D11's menus, held to 60
 flips/s; the CPU backend's run about 15, so give it `--nav-ms 200`), RT 30 s
 after the last A and held to the end of the run. It lets the intros play rather than skip them. It prints the
-`BENCH_TIMEOUT` the run needs to stderr (490 s for the fast mode).
+`BENCH_TIMEOUT` the run needs to stderr (505 s for the fast mode).
 
 `RECOMP_SAVE_DIR=@run` starts from an empty save, where this route never
 reaches the profile. Keep the save on the bench host outside every synced
@@ -243,7 +243,7 @@ rsync -a /path/to/workspace/runs/fixtures/b3-save <host>:b3-fixtures/   # once
 S=b3-save-$(date +%Y%m%d-%H%M%S)
 ssh <host> "mkdir -p /tmp/$S && cp -r ~/b3-fixtures/b3-save/UDATA ~/b3-fixtures/b3-save/TDATA /tmp/$S/"
 BENCH_ENV="RECOMP_PAD_SCRIPT=$(python3 scripts/race_gate.py --pad-script) RECOMP_SAVE_DIR=Z:/tmp/$S RECOMP_PB_BACKEND=d3d11 RECOMP_TRACE=flip" \
-BENCH_FRAMES=1 BENCH_TIMEOUT=490 ./burnout3 bench run --headless
+BENCH_FRAMES=1 BENCH_TIMEOUT=505 ./burnout3 bench run --headless
 python3 scripts/race_gate.py --check bench-logs/<stamp>
 ```
 
@@ -276,8 +276,9 @@ Each run gets `bench-logs/<stamp>/` on the host, pulled back here:
 limit with `BENCH_TIMEOUT` (SIGINT; exit 124 is a run that reached it), not
 `--seconds`. `RECOMP_SAVE_DIR=@run` starts each run with an empty hard disk
 in its log dir, and `RECOMP_FB_DUMP=@run` dumps the CPU backend's frames to
-the run's `frames/` on the host. "Press START" appears about 76 s after
-launch, so the scripts press START at 85 s.
+the run's `frames/` on the host. "Press START" appears about 89 s after
+launch (the intros play at their own length now that presents are held to
+the 60 Hz vblank), so the scripts press START at 100 s.
 
 ```
 # boot: the intros, then Press START over the attract movie
@@ -285,11 +286,11 @@ BENCH_ENV="RECOMP_FB_DUMP=@run RECOMP_DEBUG=fb_dump_flips=60 RECOMP_SAVE_DIR=@ru
 BENCH_TIMEOUT=180 ./burnout3 bench run --headless
 
 # menu: START, then A every 15 s through the profile screens
-BENCH_ENV="RECOMP_PAD_SCRIPT=85000:start:1200,100000:a:400,115000:a:400,130000:a:400,145000:a:400 RECOMP_FB_DUMP=@run RECOMP_DEBUG=fb_dump_flips=60 RECOMP_SAVE_DIR=@run" \
+BENCH_ENV="RECOMP_PAD_SCRIPT=100000:start:1200,115000:a:400,130000:a:400,145000:a:400,160000:a:400 RECOMP_FB_DUMP=@run RECOMP_DEBUG=fb_dump_flips=60 RECOMP_SAVE_DIR=@run" \
 BENCH_TIMEOUT=240 ./burnout3 bench run --headless
 
-# race: the profile flow into a race, then RT held from 270 s
-BENCH_ENV="RECOMP_PAD_SCRIPT=85000:start:1200,100000:a:400,115000:a:400,130000:up:300,145000:a:400,160000:a:400,175000:a:400,190000:a:400,205000:a:400,220000:a:400,235000:a:400,250000:a:400,270000:rt:600000 RECOMP_FB_DUMP=@run RECOMP_DEBUG=fb_dump_flips=150 RECOMP_SAVE_DIR=@run" \
+# race: the profile flow into a race, then RT held from 285 s
+BENCH_ENV="RECOMP_PAD_SCRIPT=100000:start:1200,115000:a:400,130000:a:400,145000:up:300,160000:a:400,175000:a:400,190000:a:400,205000:a:400,220000:a:400,235000:a:400,250000:a:400,265000:a:400,285000:rt:600000 RECOMP_FB_DUMP=@run RECOMP_DEBUG=fb_dump_flips=150 RECOMP_SAVE_DIR=@run" \
 BENCH_TIMEOUT=900 ./burnout3 bench run --headless
 ```
 
