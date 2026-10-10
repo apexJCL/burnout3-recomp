@@ -52,3 +52,7 @@ and per-flip frame dumps.
 ### Fixed
 - The README described a build that did not run (#1, reported by
   [@VincxBlox](https://github.com/VincxBlox)).
+- Sound effects (menu select, turbo, engines) played as fizz and noise. The
+  game loads them into its heap, whose physical addresses are also handed out
+  as contiguous memory, and the APU read the contiguous copy. The toolkit's APU
+  now reads RAM for any page the game named through MmGetPhysicalAddress.
