@@ -25,7 +25,14 @@
 /* This game's own keys, added to the toolkit's table (same row format:
  * X(ID, TIER, NAME, LEGACY, HELP); rows in docs/running.md). The packaged
  * launchers set both: they start the game from its logs folder, so the dump
- * and the emulated hard disk cannot be found from the working directory. */
+ * and the emulated hard disk cannot be found from the working directory.
+ *
+ * The enhancements layer's keys (RECOMP_CONFIG, RECOMP_RENDER_SCALE,
+ * RECOMP_PRESENT_*, ...) are the toolkit's own rows: CMakeLists.txt turns
+ * XBOXRECOMP_ENHANCE on, which defines RECOMP_ENV_HAVE_ENHANCE_KEYS on the
+ * recomp_env target and adds them to the table. A key of this game's own
+ * for the layer (cat's fps.mode is one) would go here as a CONFIG row named
+ * RECOMP_ + the dotted key, read in main.c's host_enhance_init. */
 #define RECOMP_ENV_GAME_KEYS(X) \
     X(GAME_FILES, CONFIG, "RECOMP_GAME_FILES", NULL, "game files directory (default: Burnout 3 Takedown in the working directory)") \
     X(HDD_DIR,    CONFIG, "RECOMP_HDD_DIR",    NULL, "emulated hard disk: partition images, saves (default: saves in the working directory)")

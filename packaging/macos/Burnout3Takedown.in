@@ -5,7 +5,9 @@
 # settings and logs live in ~/Library/Application Support/Burnout3Takedown,
 # so replacing the app (an update) or trashing it (uninstall) keeps them.
 # Settings: Resources/launch.env.default, then config/launch.env (KEY=value
-# lines, yours win). No lock: this is the game for play.
+# lines, yours win). Options: the game reads Resources/config.default.toml,
+# then config/config.toml, which holds only the keys you change and whose
+# comment header it writes itself. No lock: this is the game for play.
 #
 set -euo pipefail
 
@@ -49,6 +51,8 @@ ls -1t "$DATA"/logs/game-*.log 2>/dev/null | tail -n +"$keep" | while IFS= read 
 # The dump and the emulated hard disk (partition images, the profile).
 export RECOMP_GAME_FILES="$RES/game_files"
 export RECOMP_HDD_DIR="$DATA/hdd"
+# The player's options (config.default.toml in Resources is read under it).
+export RECOMP_CONFIG="$DATA/config/config.toml"
 export RECOMP_STDIO_LOG="$DATA/logs/game-$(date +%Y%m%d-%H%M%S).log"
 
 # The title keeps a host file open per cache record on its Z: partition, and

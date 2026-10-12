@@ -45,6 +45,13 @@ if(TARGET recomp_env)
     target_link_libraries(burnout3 PRIVATE recomp_env)
 endif()
 
+# The enhancements layer, when the toolkit builds it (XBOXRECOMP_ENHANCE in
+# the top-level CMakeLists; the fork's recomp_env then defines
+# RECOMP_ENV_HAVE_ENHANCE_KEYS, which main.c tests).
+if(TARGET xbox_enhance)
+    target_link_libraries(burnout3 PRIVATE xbox_enhance)
+endif()
+
 if(MSVC)
     target_compile_options(burnout3 PRIVATE /W4 /WX- /O2 /bigobj /MP${BO3_COMPILE_JOBS})
     set_source_files_properties(${RECOMP_GEN_SOURCES} PROPERTIES COMPILE_FLAGS "/w")
@@ -86,4 +93,26 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio")
 else()
     set_target_properties(burnout3 PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+endif()
+
+# The option defaults the layer reads beside the executable. Copied at build
+# time, as a file that depends on the template, so a developer build has
+# the defaults layer and an edit of the template refreshes it; a bundle
+# stages the template itself (./burnout3 package).
+if(TARGET xbox_enhance)
+    if(CMAKE_GENERATOR MATCHES "Visual Studio")
+        set(_bo3_exe_dir "${CMAKE_SOURCE_DIR}/bin")
+    else()
+        set(_bo3_exe_dir "${CMAKE_BINARY_DIR}")
+    endif()
+    add_custom_command(
+        OUTPUT ${_bo3_exe_dir}/config.default.toml
+        COMMAND ${CMAKE_COMMAND} -E copy
+                ${CMAKE_SOURCE_DIR}/packaging/config.default.toml
+                ${_bo3_exe_dir}/config.default.toml
+        DEPENDS ${CMAKE_SOURCE_DIR}/packaging/config.default.toml
+        COMMENT "config.default.toml beside burnout3")
+    add_custom_target(burnout3_config_default ALL
+        DEPENDS ${_bo3_exe_dir}/config.default.toml)
+    add_dependencies(burnout3 burnout3_config_default)
 endif()

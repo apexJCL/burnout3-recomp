@@ -43,6 +43,14 @@ if(NOT WIN32)
     find_package(OpenSSL REQUIRED)
 endif()
 
+# The toolkit's enhancements layer (render scale, present filter,
+# fullscreen; config/config.toml over config.default.toml beside the
+# executable). ON for this title, every key stock by default; not FORCE, so
+# -DXBOXRECOMP_ENHANCE=OFF builds a layer-free binary for A/B. Upstream's
+# toolkit has no such option and ignores it.
+set(XBOXRECOMP_ENHANCE ON CACHE BOOL
+    "Build the enhancements layer (config.toml, RECOMP_RENDER_SCALE, ...)")
+
 add_subdirectory(${XBOXRECOMP_DIR} ${CMAKE_BINARY_DIR}/xboxrecomp)
 
 # A toolkit with an environment table (recomp_env) takes this game's defaults

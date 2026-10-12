@@ -63,6 +63,10 @@
 #ifdef BO3_TOOLKIT_ENV_TABLE
 #include "platform/recomp_env.h"
 #endif
+#ifdef RECOMP_ENV_HAVE_ENHANCE_KEYS   /* the toolkit's opt-in enhancements layer */
+#include "enhance.h"
+#include "enhance_cfg.h"
+#endif
 #if !defined(_WIN32)
 #include "video/video_player.h"   /* xbox_HostWindowMain */
 #endif
@@ -858,6 +862,27 @@ static void record_start(const char *out)
     printf("Recording to %s (frames in %s)\n", s_rec_out, s_rec_dir);
 }
 
+/* The enhancements (render scale, present filter, fullscreen, pacing):
+ * config.default.toml beside the executable, config/config.toml over it,
+ * the environment over both, every key stock by default. The user root is
+ * the working directory: a developer runs from the repository root, as
+ * "Burnout 3 Takedown" and saves/ already assume, so their choices live in
+ * the gitignored config/config.toml and no source path is baked into the
+ * binary; a bundle's launcher names the file with RECOMP_CONFIG, so there
+ * the root is never used. Before the guest and the window, so the backends
+ * and the presenter read settled values. Burnout 3 has no keys of its own
+ * yet: any it gains are read between the two calls, so a file that sets one
+ * is not told the key is unknown. Without the layer
+ * (-DXBOXRECOMP_ENHANCE=OFF, or upstream's toolkit) this is nothing. */
+static void host_enhance_init(void)
+{
+#ifdef RECOMP_ENV_HAVE_ENHANCE_KEYS
+    xbox_enhance_init(".", NULL);
+    enhance_cfg_report_unused();
+    fflush(stderr);
+#endif
+}
+
 /* ── Boot sequence (shared) ────────────────────────────────── */
 
 static const char *s_xbe_path = BO3_XBE_DEFAULT;
@@ -1078,6 +1103,7 @@ int main(int argc, char **argv)
      * stays off and no pad (host or script) ever gets past Press START. */
     recomp_env_reload();
 #endif
+    host_enhance_init();
 
 #if defined(_WIN32)
     return host_main();

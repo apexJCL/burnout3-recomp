@@ -67,3 +67,7 @@ src/game/recomp/gen.key.json
 src/game/recomp/.gen-regenerating
 /scripts/bench.env
 /.xbr-pin
+
+# The developer's own options (the game reads config/config.toml from the
+# working directory over the build's config.default.toml); never committed.
+config/config.toml

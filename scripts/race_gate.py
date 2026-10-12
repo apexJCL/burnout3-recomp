@@ -4,10 +4,12 @@
   python3 scripts/race_gate.py --fixture DIR [--out DIR] [--mode fast|long]
                                [--exe build/burnout3] [--name NAME]
                                [--drive-secs S] [--timeout S]
+                               [--render-scale N]
   python3 scripts/race_gate.py --pad-script [--mode fast|long] [--start-ms MS]
                                [--gap-ms MS] [--nav-ms MS] [--race-ms MS]
   python3 scripts/race_gate.py --check RUNDIR [--mode fast|long]
-                               [--min-race-fps N]
+                               [--min-race-fps N] [--render-scale N]
+  python3 scripts/race_gate.py --stock-env [--render-scale N]
 
 Runs the game headless from a copy of a profile save (the fixture: UDATA and
 TDATA from a real install, never modified, never committed; --fixture or
@@ -31,7 +33,10 @@ frame was dumped after it; no [FAULT] (or [CRASH]) line; the flips kept
 moving through the drive, at no less than --min-race-fps; SIGINT stopped the
 game; the audio tap (RECOMP_DEBUG=audio_wav) grew by the drive's length
 while the race played, and is not silent there. Exit 0 when every check
-passes.
+passes. The run pins the enhancements layer at stock (RECOMP_CONFIG=none and
+the stock keys); --render-scale is the only one it varies, and the check
+fails a log whose [ENHANCE] lines show anything else. --stock-env prints the
+same pins for a bench run's BENCH_ENV.
 
 --pad-script prints the same route as a fixed RECOMP_PAD_SCRIPT timeline, for
 a runner that cannot feed RECOMP_PAD_LIVE (./burnout3 bench run under
@@ -57,6 +62,24 @@ import wave
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 FIXTURE_ENV = "RACE_GATE_FIXTURE"
+
+# The enhancements layer at stock, whatever the shell or a config.toml says:
+# no settings file at all (the defaults file beside the exe included), and
+# every one of the toolkit's keys at its stock value (the code defaults in
+# its enhance.c), so a gate run measures the game as it ships.
+# --render-scale is the one A/B it takes; check() reads the [ENHANCE] lines
+# back to prove the run was this.
+STOCK_ENV = {
+    "RECOMP_CONFIG": "none",
+    "RECOMP_RENDER_SCALE": "1",
+    "RECOMP_DISPLAY_ASPECT": "4:3",
+    "RECOMP_PRESENT_FILTER": "nearest",
+    "RECOMP_PRESENT_FULLSCREEN": "0",
+    "RECOMP_PRESENT_PACING": "spin",
+    "RECOMP_TEXTURES_PACK": "none",
+    "RECOMP_TEXTURES_FONT": "on",
+    "RECOMP_TEXTURES_TEXT": "on",
+}
 
 MODES = {"fast": 60, "long": 600}
 
@@ -88,6 +111,14 @@ DUMP = re.compile(r"\[GPU\] flip (\d+): frame dump")
 D3D11_DUMP = "[d3d11] dumped "
 PAD_LIVE = re.compile(r'PAD: live "(.*)" at t=')
 CRASH = ("[FAULT]", "[CRASH]")
+# The layer's startup lines: the settings files read ("none (RECOMP_CONFIG)"
+# when there are none; "renamed ..."/"cannot ..." lines are about the user
+# file, not the files read), and the values in force.
+ENHANCE_CONFIG = re.compile(r"^\[ENHANCE\] config: (?!renamed |cannot )(.*)$")
+ENHANCE_VALUES = re.compile(
+    r"^\[ENHANCE\] render\.scale=(\d+) present\.filter=(\S+) "
+    r"present\.fullscreen=(\d+) present\.pacing=(\S+)"
+)
 
 # The route, explored on the Mac with a loaded profile.
 # Each step waits for its event, settles, presses, and may verify:
@@ -482,6 +513,18 @@ def file_size(path):
         return None
 
 
+def stock_env(render_scale=1):
+    """The stock pins for a gate run, with the render scale under test."""
+    env = dict(STOCK_ENV)
+    env["RECOMP_RENDER_SCALE"] = str(render_scale)
+    return env
+
+
+def stock_env_words(render_scale=1):
+    """stock_env() as KEY=VALUE words, the form BENCH_ENV takes."""
+    return " ".join("%s=%s" % kv for kv in stock_env(render_scale).items())
+
+
 def drive(args, run):
     """Launch the game, walk the route, drive. Returns the run's result."""
     exe = os.path.abspath(args.exe)
@@ -503,6 +546,7 @@ def drive(args, run):
     )
     if os.environ.get("RECOMP_DEBUG"):
         env["RECOMP_DEBUG"] += "," + os.environ["RECOMP_DEBUG"]
+    env.update(stock_env(args.render_scale))
     # The DSOUND doorbell ack: without it the boot stops after flip 2, right
     # after B3XboxFx.bin. A game default on main, a toolkit default only from
     # f465cd3 on, and the macOS host branch dropped its own: say it here so
@@ -650,12 +694,13 @@ def check(
     min_race_fps=MIN_RACE_FPS,
     stall_secs=STALL_SECS,
     drive_secs=None,
+    render_scale=1,
 ):
     """The gate's checks on a run directory; returns (ok, report dict). A run
     without gate.json is a bench run, read from its log and exit-code; it
     has no audio tap. Every rate and duration here is on the flip trace's
     clock (the "[GPU] flip N T ms" lines), so a driven run and a bench run
-    compare."""
+    compare. The [ENHANCE] lines must show a stock run at render_scale."""
     live = True
     if result is None:
         try:
@@ -682,8 +727,18 @@ def check(
     if not race:
         fails.append("the race was not reached")
     flips, dumps = [], []
+    config = values = None
     with open(os.path.join(run, "game-stdio.log"), errors="replace") as f:
         for line in f:
+            line = line.rstrip("\r\n")
+            m = ENHANCE_CONFIG.match(line)
+            if m:
+                config = m.group(1)
+                continue
+            m = ENHANCE_VALUES.match(line)
+            if m:
+                values = m.groups()
+                continue
             m = FLIP.match(line)
             if m:
                 flips.append((int(m.group(1)), int(m.group(2))))
@@ -696,6 +751,7 @@ def check(
     # A frame dumped after the race started. The dump files are numbered in
     # order; the log says which flip each one is ("flip N: frame dump"), or
     # for D3D11 (BENCH_FRAMES=1) the flip line before it.
+    enhance_checks(config, values, render_scale, rep, fails)
     rep["frames"] = len(dumps)
     if race:
         after = [n for n in dumps if n > race["flip"]]
@@ -734,6 +790,36 @@ def check(
     rep["failures"] = fails
     rep["ok"] = not fails
     return not fails, rep
+
+
+def enhance_checks(config, values, render_scale, rep, fails):
+    """The run was stock but for the scale under test: no settings file read
+    and the layer's values those of STOCK_ENV. A build without the layer
+    prints no [ENHANCE] lines, and its run proves nothing about them."""
+    rep["enhance_config"] = config
+    if values is None:
+        fails.append("no [ENHANCE] values line (a build without the enhancements layer?)")
+        return
+    scale, filt, fullscreen, pacing = values
+    rep["enhance"] = {
+        "render.scale": int(scale),
+        "present.filter": filt,
+        "present.fullscreen": int(fullscreen),
+        "present.pacing": pacing,
+    }
+    if config is None:
+        fails.append("no [ENHANCE] config line")
+    elif not config.startswith("none"):
+        fails.append("the run read settings files: %s (want RECOMP_CONFIG=none)" % config)
+    want = {
+        "render.scale": render_scale,
+        "present.filter": STOCK_ENV["RECOMP_PRESENT_FILTER"],
+        "present.fullscreen": int(STOCK_ENV["RECOMP_PRESENT_FULLSCREEN"]),
+        "present.pacing": STOCK_ENV["RECOMP_PRESENT_PACING"],
+    }
+    for key, value in want.items():
+        if rep["enhance"][key] != value:
+            fails.append("%s=%s, want %s" % (key, rep["enhance"][key], value))
 
 
 def audio(run, result, rep, fails, silence_db):
@@ -839,6 +925,18 @@ def main(argv):
     # The Mac front end flips at several hundred a second and the toolkit
     # stops at 200 dumps, so a sparse interval keeps some for the race.
     ap.add_argument("--dump-every", type=int, default=1000, help="flips between frame dumps")
+    ap.add_argument(
+        "--render-scale",
+        type=int,
+        default=1,
+        help="RECOMP_RENDER_SCALE for an A/B run (every other enhancement key stays stock);"
+        " --check and --stock-env take it too",
+    )
+    ap.add_argument(
+        "--stock-env",
+        action="store_true",
+        help="print the stock pins as KEY=VALUE words, for BENCH_ENV",
+    )
     ap.add_argument("--check", metavar="RUNDIR")
     ap.add_argument("--min-race-fps", type=float, default=MIN_RACE_FPS)
     ap.add_argument("--pad-script", action="store_true")
@@ -856,9 +954,17 @@ def main(argv):
         args.drive_secs = MODES[args.mode]
 
     if args.check:
-        ok, rep = check(args.check, min_race_fps=args.min_race_fps, drive_secs=args.drive_secs)
+        ok, rep = check(
+            args.check,
+            min_race_fps=args.min_race_fps,
+            drive_secs=args.drive_secs,
+            render_scale=args.render_scale,
+        )
         print(json.dumps(rep, indent=2))
         return 0 if ok else 1
+    if args.stock_env:
+        print(stock_env_words(args.render_scale))
+        return 0
     if args.pad_script:
         nav = PAD_NAV_MS if args.nav_ms is None else args.nav_ms
         script, limit = pad_script(args.drive_secs, args.start_ms, args.gap_ms, nav, args.race_ms)
@@ -887,7 +993,7 @@ def main(argv):
     )
     result = drive(args, run)
     result.update({"mode": args.mode, "drive_secs": args.drive_secs, "fixture": fixture})
-    ok, rep = check(run, result, min_race_fps=args.min_race_fps)
+    ok, rep = check(run, result, min_race_fps=args.min_race_fps, render_scale=args.render_scale)
     result["report"] = rep
     with open(os.path.join(run, "gate.json"), "w") as f:
         json.dump(result, f, indent=2)

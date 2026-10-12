@@ -109,6 +109,48 @@ For debugging:
 | `RECOMP_FRAME_TRACE=<file>` | Once `<file>` exists, logs every batch of the next frame (surface, texture, blend, depth, combiners, pixels written) to stderr. Delete and recreate the file to trace another frame. `RECOMP_FRAME_TRACE_METHODS=1` adds every method. |
 | `BO3_TRAP_NAN=<file>` | Trap the first x87/SSE NaN once `<file>` exists. That is how the camera NaN (lahf) was found. |
 
+## Options (`config.default.toml`, `config.toml`)
+
+The fork toolkit's enhancements layer is built in (`XBOXRECOMP_ENHANCE`,
+on in `CMakeLists.txt`), and every key in it is stock unless something sets it.
+The options live in two files. `config.default.toml` sits beside the
+executable (in `Contents/Resources/` in the macOS app; the build copies
+`packaging/config.default.toml` there) and lists every key at its stock
+value. An install or upgrade replaces it, and the game never writes it.
+`config/config.toml` holds only the keys the player changed, and nothing
+overwrites it. A developer build reads it from the working directory, and
+the packaged launchers name the one under the user-data folder through
+`RECOMP_CONFIG`. When the file is missing and its folder exists, the game
+writes a comment-only header there. An `enhance.toml` left by an older build
+is renamed to `config.toml` once.
+
+The lookup order is: the environment, then `config/config.toml` (or the
+`RECOMP_CONFIG` file), then `config.default.toml`, then the code default. The
+`[ENHANCE]` lines at startup name the files read and the values in force, and
+a key the game does not know is reported there too. The toolkit's
+`docs/runtime/config.md` has the details. This game has no keys of its own
+in the layer.
+
+| Key | Variable | Values | Stock |
+|---|---|---|---|
+| (the file) | `RECOMP_CONFIG` | a path to the player's `config.toml`, or `none` to read no file at all, not even the defaults file (`RECOMP_ENHANCE_CONFIG` is the old name) | `config/config.toml` |
+| `render.scale` | `RECOMP_RENDER_SCALE` | internal resolution factor, 1 to 4 | `1` |
+| `display.aspect` | `RECOMP_DISPLAY_ASPECT` | `4:3` (the only one implemented) | `4:3` |
+| `present.filter` | `RECOMP_PRESENT_FILTER` | `nearest`, `linear`, `integer` | `nearest` |
+| `present.fullscreen` | `RECOMP_PRESENT_FULLSCREEN` | borderless desktop fullscreen at start: `true`/`false` in the file, `1`/`0` in the variable | `false` (`0`) |
+| `present.pacing` | `RECOMP_PRESENT_PACING` | `spin` (busy-wait) or `sleep` (the lowered spin waits sleep) | `spin` |
+| `textures.pack` | `RECOMP_TEXTURES_PACK` | a texture pack file, or `none` | `none` |
+| `textures.font` | `RECOMP_TEXTURES_FONT` | the pack's font-atlas entries, `on`/`off` | `on` |
+| `textures.text` | `RECOMP_TEXTURES_TEXT` | the pack's baked-text entries, `on`/`off` | `on` |
+
+The race gate and every bench example here run stock: `RECOMP_CONFIG=none`
+and the keys above at their stock values, so a developer's `config.toml`
+never changes a measurement. `python3 scripts/race_gate.py --stock-env`
+prints those pins as `KEY=VALUE` words for `BENCH_ENV` (`--render-scale N`
+for the one A/B), and `--check` fails a run whose `[ENHANCE]` lines show
+anything else (check a scale-2 run with `--render-scale 2` too). `-DXBOXRECOMP_ENHANCE=OFF` builds the game
+without the layer, for an A/B comparison.
+
 ## A scripted session, start to finish
 
 This is how the screenshots and GIFs in the README were made: headless, a live
@@ -242,7 +284,7 @@ clear afterwards, and name that folder instead:
 rsync -a /path/to/workspace/runs/fixtures/b3-save <host>:b3-fixtures/   # once
 S=b3-save-$(date +%Y%m%d-%H%M%S)
 ssh <host> "mkdir -p /tmp/$S && cp -r ~/b3-fixtures/b3-save/UDATA ~/b3-fixtures/b3-save/TDATA /tmp/$S/"
-BENCH_ENV="RECOMP_PAD_SCRIPT=$(python3 scripts/race_gate.py --pad-script) RECOMP_SAVE_DIR=Z:/tmp/$S RECOMP_PB_BACKEND=d3d11 RECOMP_TRACE=flip" \
+BENCH_ENV="RECOMP_PAD_SCRIPT=$(python3 scripts/race_gate.py --pad-script) RECOMP_SAVE_DIR=Z:/tmp/$S RECOMP_PB_BACKEND=d3d11 RECOMP_TRACE=flip $(python3 scripts/race_gate.py --stock-env)" \
 BENCH_FRAMES=1 BENCH_TIMEOUT=505 ./burnout3 bench run --headless
 python3 scripts/race_gate.py --check bench-logs/<stamp>
 ```
@@ -282,15 +324,15 @@ the 60 Hz vblank), so the scripts press START at 100 s.
 
 ```
 # boot: the intros, then Press START over the attract movie
-BENCH_ENV="RECOMP_FB_DUMP=@run RECOMP_DEBUG=fb_dump_flips=60 RECOMP_SAVE_DIR=@run" \
+BENCH_ENV="$(python3 scripts/race_gate.py --stock-env) RECOMP_FB_DUMP=@run RECOMP_DEBUG=fb_dump_flips=60 RECOMP_SAVE_DIR=@run" \
 BENCH_TIMEOUT=180 ./burnout3 bench run --headless
 
 # menu: START, then A every 15 s through the profile screens
-BENCH_ENV="RECOMP_PAD_SCRIPT=100000:start:1200,115000:a:400,130000:a:400,145000:a:400,160000:a:400 RECOMP_FB_DUMP=@run RECOMP_DEBUG=fb_dump_flips=60 RECOMP_SAVE_DIR=@run" \
+BENCH_ENV="$(python3 scripts/race_gate.py --stock-env) RECOMP_PAD_SCRIPT=100000:start:1200,115000:a:400,130000:a:400,145000:a:400,160000:a:400 RECOMP_FB_DUMP=@run RECOMP_DEBUG=fb_dump_flips=60 RECOMP_SAVE_DIR=@run" \
 BENCH_TIMEOUT=240 ./burnout3 bench run --headless
 
 # race: the profile flow into a race, then RT held from 285 s
-BENCH_ENV="RECOMP_PAD_SCRIPT=100000:start:1200,115000:a:400,130000:a:400,145000:up:300,160000:a:400,175000:a:400,190000:a:400,205000:a:400,220000:a:400,235000:a:400,250000:a:400,265000:a:400,285000:rt:600000 RECOMP_FB_DUMP=@run RECOMP_DEBUG=fb_dump_flips=150 RECOMP_SAVE_DIR=@run" \
+BENCH_ENV="$(python3 scripts/race_gate.py --stock-env) RECOMP_PAD_SCRIPT=100000:start:1200,115000:a:400,130000:a:400,145000:up:300,160000:a:400,175000:a:400,190000:a:400,205000:a:400,220000:a:400,235000:a:400,250000:a:400,265000:a:400,285000:rt:600000 RECOMP_FB_DUMP=@run RECOMP_DEBUG=fb_dump_flips=150 RECOMP_SAVE_DIR=@run" \
 BENCH_TIMEOUT=900 ./burnout3 bench run --headless
 ```
 

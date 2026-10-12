@@ -30,6 +30,13 @@ and per-flip frame dumps.
 - Docs: `architecture.md`, `running.md`, and `boot.md`, which records each fix
   between the entry point and a playable race.
 - CONTRIBUTING, CONTRIBUTORS, ROADMAP, this changelog, and the MIT LICENSE file.
+- Options files, from the toolkit's enhancements layer: `config.default.toml`
+  beside the game lists every option at its stock value, and
+  `config/config.toml` holds the ones the player changes. Render scale
+  (`[render] scale = 2`, or `RECOMP_RENDER_SCALE=2`) draws at two to four
+  times 640x480 on Metal and Direct3D 11. The present filter, fullscreen at
+  start and spin-wait pacing are options too. Every option is stock unless
+  set, and the race gate pins them stock (`race_gate.py --stock-env`).
 
 ### Changed
 - The build links the xboxrecomp runtime libraries (`../xboxrecomp`) instead of
