@@ -17,6 +17,14 @@ extracting (Mark of the Web), or Windows asks again for every file.
 To keep saves and settings somewhere else, set BURNOUT3TAKEDOWN_DATA_DIR
 (a Windows environment variable) to that folder before starting the game.
 
+Options
+-------
+Your options live in config\config.toml in %LOCALAPPDATA%\Burnout3Takedown.
+config.default.toml, in the install folder, lists every option at its
+stock value. Copy a line from it into your config.toml and change it there,
+for example "scale = 2" under "[render]" to draw at twice the resolution.
+An update replaces config.default.toml but never touches your file.
+
 Note: this build is tested under Proton on Linux only, not on native
 Windows.
 

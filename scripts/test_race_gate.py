@@ -345,6 +345,14 @@ def test_stop_on_a_game_already_gone():
 
 RATE = 4000  # the test WAVs' sample rate; 4 bytes a frame
 
+# The layer's startup lines of a stock run (as the toolkit prints them).
+STOCK_ENHANCE = [
+    "[ENHANCE] config: none (RECOMP_CONFIG)",
+    "[ENHANCE] render.scale=1 present.filter=nearest present.fullscreen=0"
+    " present.pacing=spin (display.aspect=4:3)",
+    "[ENHANCE] textures.pack=none",
+]
+
 
 def make_run(
     tmp_path,
@@ -356,13 +364,14 @@ def make_run(
     stop="INT",
     gap=None,
     wav_grew=20,
+    enhance=STOCK_ENHANCE,
 ):
     """A driven run: flips 1..3000 at 10 ms each (100 flips/s), the race
     from flip 1000 (10 s) to 3000 (30 s), a 20 s drive. The WAV has 10 s of
     menu audio and then the drive's."""
     run = tmp_path / "run"
     (run / "frames").mkdir(parents=True)
-    lines, ms = [], 0
+    lines, ms = list(enhance), 0
     for n in range(1, 3001):
         ms += 10
         if gap and n == gap[0]:
@@ -547,3 +556,114 @@ def test_check_bench_run_without_flip_lines(tmp_path):
     open(log, "w").write("\n".join(lines) + "\n")
     ok, rep = race_gate.check(run)
     assert not ok and "RECOMP_TRACE=flip" in " ".join(rep["failures"])
+
+
+def test_stock_env_reads_no_config_and_varies_only_the_scale():
+    env = race_gate.stock_env()
+    assert env["RECOMP_CONFIG"] == "none"
+    assert env["RECOMP_RENDER_SCALE"] == "1"
+    assert env["RECOMP_PRESENT_PACING"] == "spin"
+    two = race_gate.stock_env(2)
+    assert two["RECOMP_RENDER_SCALE"] == "2"
+    assert {k: v for k, v in two.items() if k != "RECOMP_RENDER_SCALE"} == {
+        k: v for k, v in env.items() if k != "RECOMP_RENDER_SCALE"
+    }
+
+
+def test_check_reports_a_stock_run(tmp_path):
+    run, result = make_run(tmp_path)
+    ok, rep = race_gate.check(run, result)
+    assert ok, rep["failures"]
+    assert rep["enhance_config"] == "none (RECOMP_CONFIG)"
+    assert rep["enhance"] == {
+        "render.scale": 1,
+        "present.filter": "nearest",
+        "present.fullscreen": 0,
+        "present.pacing": "spin",
+    }
+
+
+def test_check_a_scale_2_run_passes_only_at_scale_2(tmp_path):
+    lines = [x.replace("render.scale=1", "render.scale=2") for x in STOCK_ENHANCE]
+    run, result = make_run(tmp_path, enhance=lines)
+    ok, rep = race_gate.check(run, result, render_scale=2)
+    assert ok, rep["failures"]
+    assert rep["enhance"]["render.scale"] == 2
+    ok, rep = race_gate.check(run, result)
+    assert not ok and "render.scale=2, want 1" in rep["failures"]
+
+
+def test_check_fails_a_run_that_read_a_config_file(tmp_path):
+    lines = [
+        "[ENHANCE] config: renamed ./config/enhance.toml to config.toml (one-time migration)",
+        "[ENHANCE] config: /x/config.default.toml (5 keys), ./config/config.toml (1 keys)",
+    ] + STOCK_ENHANCE[1:]
+    run, result = make_run(tmp_path, enhance=lines)
+    ok, rep = race_gate.check(run, result)
+    assert not ok
+    assert rep["enhance_config"].startswith("/x/config.default.toml")
+    assert "the run read settings files" in " ".join(rep["failures"])
+
+
+def test_check_fails_non_stock_pacing_and_a_build_without_the_layer(tmp_path):
+    lines = [x.replace("pacing=spin", "pacing=sleep") for x in STOCK_ENHANCE]
+    run, result = make_run(tmp_path, enhance=lines)
+    ok, rep = race_gate.check(run, result)
+    assert not ok and "present.pacing=sleep, want spin" in rep["failures"]
+    run, result = make_run(tmp_path / "bare", enhance=[])
+    ok, rep = race_gate.check(run, result)
+    assert not ok and "enhancements layer" in " ".join(rep["failures"])
+
+
+def test_stock_env_pins_all_nine_toolkit_keys():
+    assert set(race_gate.STOCK_ENV) == {
+        "RECOMP_CONFIG",
+        "RECOMP_RENDER_SCALE",
+        "RECOMP_DISPLAY_ASPECT",
+        "RECOMP_PRESENT_FILTER",
+        "RECOMP_PRESENT_FULLSCREEN",
+        "RECOMP_PRESENT_PACING",
+        "RECOMP_TEXTURES_PACK",
+        "RECOMP_TEXTURES_FONT",
+        "RECOMP_TEXTURES_TEXT",
+    }
+
+
+def test_stock_env_words(capsys):
+    assert race_gate.main(["--stock-env", "--render-scale", "2"]) == 0
+    words = capsys.readouterr().out.split()
+    assert dict(w.split("=", 1) for w in words) == race_gate.stock_env(2)
+
+
+class FakeProc:
+    """A game that has already exited: the route stops at once."""
+
+    returncode = 3
+
+    def poll(self):
+        return 3
+
+
+@pytest.mark.parametrize("argv,scale", [([], "1"), (["--render-scale", "2"], "2")])
+def test_drive_pins_stock_over_the_shell(tmp_path, monkeypatch, argv, scale):
+    monkeypatch.setenv("RECOMP_CONFIG", "/x/config.toml")
+    monkeypatch.setenv("RECOMP_RENDER_SCALE", "3")
+    seen = {}
+
+    def popen(cmd, env=None, **kw):
+        seen.update(env)
+        return FakeProc()
+
+    monkeypatch.setattr(race_gate.subprocess, "Popen", popen)
+    fx = tmp_path / "fx"
+    (fx / "UDATA").mkdir(parents=True)
+    (fx / "TDATA").mkdir()
+    out = tmp_path / "out"
+    out.mkdir()
+    args = ["--fixture", str(fx), "--out", str(out), "--exe", "/nonexistent/burnout3"]
+    assert race_gate.main(args + argv) == 1
+    (run,) = out.iterdir()
+    words = dict(w.split("=", 1) for w in (run / "env.txt").read_text().split("\n")[0].split())
+    assert words["RECOMP_CONFIG"] == seen["RECOMP_CONFIG"] == "none"
+    assert words["RECOMP_RENDER_SCALE"] == seen["RECOMP_RENDER_SCALE"] == scale
+    assert words["RECOMP_PRESENT_PACING"] == "spin"
