@@ -28,9 +28,9 @@ url = "https://github.com/apexJCL/xboxrecomp-cli.git"
 [toolkit]
 # The same toolkit as BLiNX 2: both games move their pins together.
 url = "https://github.com/apexJCL/xboxrecomp.git"
-tag = "blinx2-v0.3.0"
+tag = "blinx2-v0.3.1"
 branch = "blinx2/portability"
-commit = "a63c64f47abe3c947faf8a967f54f255f42a0f5d"
+commit = "ac27175a3f54ff94bc272d1de533ccfa8557f409"
 
 [toolchain]
 llvm_mingw = "20260922"
