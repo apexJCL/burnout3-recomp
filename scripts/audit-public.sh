@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Before a push to the public fork (apexJCL/burnout3): what the push would
+# Before a push to the public fork (apexJCL/burnout3-recomp): what the push would
 # publish, checked for what must never leave the maintainer's machines.
 # xboxrecomp-cli's scripts/audit-public.sh, with this fork's ranges, the
 # upstream screenshots and the README images allowed, and a refusal list.
