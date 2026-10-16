@@ -36,8 +36,15 @@ endif()
 
 target_link_libraries(burnout3 PRIVATE
     xbox_kernel xbox_d3d8 xbox_dsound xbox_input xbox_usb xbox_video xbox_apu
-    kernel32 user32 gdi32 dbghelp
 )
+
+# Windows SDK import libraries (dbghelp names the generated function a fault
+# happened in). On macOS and Linux the toolkit targets bring SDL2 and
+# OpenSSL, and the fault handler uses dladdr, so the executable must stay
+# unstripped there.
+if(WIN32)
+    target_link_libraries(burnout3 PRIVATE kernel32 user32 gdi32 dbghelp)
+endif()
 
 target_include_directories(burnout3 PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -100,9 +107,10 @@ endif()
 
 # bin/ is the MSVC build's layout (README, Setup.cmd), whatever the
 # generator (Visual Studio, or Ninja from VS Open Folder and VS Code). A
-# MinGW build puts the exe at the top of its own build dir, so a cross build
-# and a native one never overwrite each other's exe.
-if(NOT MINGW)
+# MinGW build, and a macOS or Linux one, puts the exe at the top of its own
+# build dir, so a cross build and a native one never overwrite each other's
+# exe.
+if(WIN32 AND NOT MINGW)
     set_target_properties(burnout3 PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY         "${CMAKE_SOURCE_DIR}/bin"
         RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/bin"

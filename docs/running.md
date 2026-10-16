@@ -51,6 +51,7 @@ The options:
   the path is printed. The frames are buffered on disk rather than piped,
   because at a few fps there is nothing to gain from streaming, and an encoder
   that fails can't lose the run.
+- **`--seconds N`** ends the run after N seconds, recording or not.
 
 The fps is real frames per wall-clock second. The title steps its simulation a
 fixed amount per frame, so at 3 fps a race plays in slow motion but correctly,
@@ -139,3 +140,44 @@ touch runs/mp/rec.flag          # start dumping every flip
 ```
 
 Then `ffmpeg -framerate 30 -i runs/mp/f%05d.bmp -pix_fmt yuv420p mp.mp4`.
+
+## On macOS and Linux
+
+The same `main.c` builds on macOS (arm64, Apple clang) and Linux against
+the toolkit's SDL host (xboxrecomp v0.14.0 or later). The toolkit needs
+SDL2, OpenSSL, libepoxy and pkg-config (`brew install sdl2 openssl libepoxy
+pkg-config` on a Mac). With `src/game/recomp/gen/` generated (README,
+*Building from source*; `regen.sh` wants a `py` shim off Windows):
+
+```
+export DEVELOPER_DIR=/Library/Developer/CommandLineTools   # macOS, if Xcode is absent
+cmake -S . -B build/host -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build/host --target burnout3
+./build/host/burnout3              # a window; --headless for none
+```
+
+What differs from Windows:
+
+- Upstream's toolkit draws with the CPU rasteriser in the SDL window: the
+  front end at a few fps, a race at one or two. On macOS `main.c` asks for
+  `RECOMP_PB_BACKEND=metal`, which a toolkit with a Metal backend (the
+  xboxrecomp fork) uses and upstream's ignores; `RECOMP_PB_BACKEND=cpu`
+  asks for the CPU rasteriser on either.
+- `RECOMP_FB_WINDOW` defaults to `1` unless `--headless`: the SDL host opens
+  its window only with it. Windowed, it runs the guest on its own thread;
+  the window's controllers are the pads. Headless (`--headless`, or
+  `RECOMP_HEADLESS=1`) the guest runs on the main thread with no window;
+  `RECOMP_PAD_SCRIPT` works as on Windows.
+- `RECOMP_TITLE_KEVENTS` defaults to `1`: D3D8 builds the KEVENT its vblank
+  DPC sets without `KeInitializeEvent`, and on POSIX the bridge needs a host
+  event for it. An explicit value in the environment wins.
+- `RECOMP_VBLANK` defaults to `1`: with that host event D3D's present waits
+  on the vblank event, so without vblanks the boot stops after the first
+  flip. v0.14.0 only checks that the key is set, so `RECOMP_VBLANK=0` keeps
+  vblanks on too.
+- A fault prints the same `[FAULT]` report from a SIGBUS/SIGSEGV handler
+  (`dladdr` names the generated function; keep the executable unstripped).
+- `RECOMP_HANG_WATCHDOG` and `BO3_TRAP_NAN` are Windows-only (they need Win32
+  thread contexts); `RECOMP_WATCHDOG_SECS` dumps the guest stack on every
+  host. `--record` keeps its frames under `$TMPDIR/bo3rec_<pid>/`.
+- Sound goes through SDL; `SDL_AUDIODRIVER=dummy` runs silent.

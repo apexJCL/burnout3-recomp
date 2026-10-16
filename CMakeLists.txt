@@ -34,6 +34,15 @@ if(BO3_ABI_CHECK)
 endif()
 
 set(XBOXRECOMP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../xboxrecomp" CACHE PATH "Path to xboxrecomp toolkit")
+
+# Off Windows, xbox_kernel links OpenSSL::Crypto PUBLIC but finds it inside
+# its own subdirectory, where the imported target stays invisible to this
+# executable; a clean configure then fails with "target was not found".
+# Finding it here first puts it in scope for both.
+if(NOT WIN32)
+    find_package(OpenSSL REQUIRED)
+endif()
+
 add_subdirectory(${XBOXRECOMP_DIR} ${CMAKE_BINARY_DIR}/xboxrecomp)
 
 add_subdirectory(src/game)

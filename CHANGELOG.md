@@ -35,6 +35,11 @@ and per-flip frame dumps.
   of MinGW's `xinput` (which needs `XINPUT1_3.dll`), and no
   `-Wparentheses-equality` flood from the generated code. A MinGW build puts
   the exe in its build dir instead of `bin\`; every MSVC build keeps `bin\`.
+- Runs on macOS and Linux through xboxrecomp's SDL host (v0.14.0): the same
+  `main.c`, with a SIGBUS/SIGSEGV fault report, upstream's CPU rasteriser in
+  the SDL window, and `RECOMP_PB_BACKEND=metal` on a Mac for a toolkit that
+  has the Metal backend. `--seconds N` now ends any run, not only a
+  `--record` one.
 
 ### Changed
 - `burnout3.exe` is a Windows GUI program: one window, the game's, from

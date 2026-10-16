@@ -242,6 +242,10 @@ A MinGW build puts the exe in its build dir (`build/mingw/burnout3.exe`, with
 `burnout3.pdb` for fault reports) rather than `bin\`. It links
 `xinput1_4`, as MSVC's build does, so it starts on a stock Windows 10 or 11.
 
+On macOS and Linux the same sources build natively against the toolkit's SDL
+host, and play on its CPU rasteriser: see
+[docs/running.md](docs/running.md#on-macos-and-linux).
+
 ## Contributors
 
 See [CONTRIBUTORS.md](CONTRIBUTORS.md). Contributions are welcome; read
