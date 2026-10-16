@@ -254,6 +254,13 @@ The C is regenerated, not edited. If the output is wrong, the fix goes in the
 toolkit's recompiler or in this repo's per-title data
 (`config/seed_functions.json`, `src/game/main.c`), never by hand in `gen/`.
 
+The exe is a Windows GUI-subsystem program, so it opens no console window
+beside the game. Started from a terminal, `cmd` no longer waits for it and
+its output goes nowhere: set `RECOMP_STDIO_LOG=<file>` (fork toolkit) to keep
+the log, or configure with `-DBO3_CONSOLE=ON` to build the console program,
+which prints to the terminal as before (needed for Ctrl+C to stop a
+`--record` run).
+
 ## Contributors
 
 See [CONTRIBUTORS.md](CONTRIBUTORS.md). Contributions are welcome; read

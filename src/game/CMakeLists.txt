@@ -9,11 +9,31 @@ file(GLOB RECOMP_GEN_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/recomp/gen/recomp_*.c"
 )
 
-add_executable(burnout3
+# A GUI-subsystem program on Windows, as the template and BLiNX 2 are: a
+# console-subsystem exe started with no console attached (the bundle's
+# launcher, Explorer, or umu-run under Proton) gets a console window of its
+# own beside the game's. Under WIN32 a run from a terminal returns at once
+# and printf reaches nothing unless RECOMP_STDIO_LOG names a file;
+# -DBO3_CONSOLE=ON builds the console program again for terminal debugging
+# (docs/running.md, TESTING.md's run lines).
+option(BO3_CONSOLE "Windows: build a console-subsystem exe (terminal debugging)" OFF)
+if(BO3_CONSOLE)
+    set(_bo3_subsystem "")
+else()
+    set(_bo3_subsystem WIN32)
+endif()
+
+add_executable(burnout3 ${_bo3_subsystem}
     main.c
     recomp/recomp_manual.c
     ${RECOMP_GEN_SOURCES}
 )
+# main(argc, argv) stays the entry point under both subsystems: MSVC would
+# look for WinMain under WIN32, so name the CRT's main startup; llvm-mingw's
+# CRT starts a main program under -mwindows by itself.
+if(MSVC AND NOT BO3_CONSOLE)
+    target_link_options(burnout3 PRIVATE /ENTRY:mainCRTStartup)
+endif()
 
 target_link_libraries(burnout3 PRIVATE
     xbox_kernel xbox_d3d8 xbox_dsound xbox_input xbox_usb xbox_video xbox_apu
@@ -40,8 +60,8 @@ target_include_directories(burnout3 PRIVATE
 
 if(TARGET recomp_env)
     target_compile_definitions(burnout3 PRIVATE BO3_TOOLKIT_ENV_TABLE)
-    # main.c reads the game's own keys (RECOMP_GAME_FILES, RECOMP_HDD_DIR)
-    # and RECOMP_STDIO_LOG through the table.
+    # main.c reads the folder keys (RECOMP_GAME_FILES, RECOMP_HDD_DIR),
+    # RECOMP_STDIO_LOG and RECOMP_PB_BACKEND through the table.
     target_link_libraries(burnout3 PRIVATE recomp_env)
 endif()
 

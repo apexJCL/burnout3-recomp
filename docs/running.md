@@ -16,9 +16,18 @@ Built by `./burnout3 build` (llvm-mingw, the Proton path) the exe is
 `RECOMP_HDD_DIR` move the two folders, so the exe can run from anywhere: the
 packaged launchers start it from its logs folder and set both.
 
-- **Windowed** by default. The title bar reads
-  `Burnout 3: Takedown | FPS: 14 | draws: 212`. The title comes from the XBE
+- **One window** by default: the CPU rasteriser's framebuffer window, or on
+  the fork toolkit the D3D11 renderer's own window (`RECOMP_PB_BACKEND=d3d11`,
+  the packaged game's default), never both. The title bar reads
+  `Burnout 3: Takedown | FPS: 14 | draws: 212` (with `RECOMP_TRACE=title`
+  on the fork toolkit). Upstream's toolkit takes the name from the XBE
   certificate; draws are the draw calls in the last frame.
+- **No console window.** The exe is a Windows GUI-subsystem program, so a
+  launch from Explorer, the bundle's launcher or Proton opens no console
+  beside the game. From a terminal, `cmd` returns at once and the output goes
+  nowhere: set `RECOMP_STDIO_LOG=<file>` (the fork toolkit) to keep it, or
+  build with `-DBO3_CONSOLE=ON` for the console program, which prints to the
+  terminal and keeps it waiting until the game ends.
 - **`--headless`** opens no window. Use it for scripts, CI, and over RDP, where a
   window would land on whatever screen the remote session is showing.
 - **`--record out.mp4`** writes every presented frame as a BMP into
@@ -76,19 +85,20 @@ Defaults that `main.c` sets, which you can override:
 | Variable | Default | Why |
 |---|---|---|
 | `RECOMP_PB_EXEC` | `1` | The software GPU. `0` turns it off: nothing is drawn, but boot runs ~50× faster, which helps when following it by file accesses. |
-| `RECOMP_FB_WINDOW` | `1` unless `--headless` | The window. |
+| `RECOMP_FB_WINDOW` | `1` unless `--headless` | The CPU rasteriser's window. On the fork toolkit (the environment table) only when `RECOMP_PB_BACKEND` is not `d3d11`, which opens its own window; the toolkit ignores the key beside `d3d11` too. |
 | `RECOMP_USB` / `RECOMP_USB_PADS` | `1` / `2` | The USB host and pad count (1–4). Split-screen modes are greyed out with one pad. |
 | `RECOMP_AC97_READY` | `1` | DirectSound refuses to start until the AC'97 codec reports ready, and RenderWare won't start without audio. |
 | `RECOMP_APU_DSP_ACK` | `0x825F8810` | The DSP doorbell DirectSound waits on; [boot.md](boot.md) #5. On the fork toolkit the default is `auto` (`src/env/recomp_env_game.h`). |
 
 On the fork toolkit (`xboxrecomp` with the `recomp_env` table, which
-`./burnout3` builds against), the game also reads its own keys, through the
-table:
+`./burnout3` builds against), the game also reads these toolkit keys, through
+the table (every game's packaged launcher sets them; the defaults are
+`main.c`'s):
 
 | Variable | Default | Why |
 |---|---|---|
-| `RECOMP_GAME_FILES` | `Burnout 3 Takedown` | The unpacked disc; the XBE is `<this>\default.xbe` unless a path is given on the command line. |
-| `RECOMP_HDD_DIR` | `saves` | The emulated hard disk (partition images, the profile). Made with its parents. |
+| `RECOMP_GAME_FILES` | `Burnout 3 Takedown` | A toolkit key: the unpacked disc; the XBE is `<this>\default.xbe` unless a path is given on the command line. |
+| `RECOMP_HDD_DIR` | `saves` | A toolkit key: the emulated hard disk (partition images, the profile). Made with its parents. |
 | `RECOMP_STDIO_LOG` | unset | A toolkit key: stdout and stderr go to this file (truncated at start). Proton drops a game's own output, so the bench's `game-stdio.log` and the launchers' `logs\` come from it. |
 
 The packaged launchers set those three below the user-data folder:

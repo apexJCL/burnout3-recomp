@@ -28,9 +28,12 @@ url = "https://github.com/apexJCL/xboxrecomp-cli.git"
 [toolkit]
 # The same toolkit as BLiNX 2: both games move their pins together.
 url = "https://github.com/apexJCL/xboxrecomp.git"
-tag = "blinx2-v0.3.1"
-branch = "blinx2/portability"
-commit = "ac27175a3f54ff94bc272d1de533ccfa8557f409"
+# The local integration branch's merge of the one-window guard and the
+# folder rows (b3-public-release P1), not public yet: a build uses a
+# developer checkout (XBOXRECOMP_DIR) at this commit. The push round puts
+# the public sha and tag here.
+branch = "posix-host/portability"
+commit = "9024725512148ca77fcdfd06db00c10d65ee77cb"
 
 [toolchain]
 llvm_mingw = "20260922"

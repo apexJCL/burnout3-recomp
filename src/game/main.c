@@ -67,8 +67,10 @@
 #include "enhance.h"
 #include "enhance_cfg.h"
 #endif
-#if !defined(_WIN32)
-#include "video/video_player.h"   /* xbox_HostWindowMain */
+#if !defined(_WIN32) || defined(BO3_TOOLKIT_ENV_TABLE)
+/* xbox_HostWindowMain (POSIX); xbox_HostWindowSetTitle (the fork toolkit,
+ * every host) */
+#include "video/video_player.h"
 #endif
 
 /* RECOMP_TLS is required: the runtime defines these thread-local, and a plain
@@ -131,9 +133,10 @@ static void stdio_log_setup(void)
     if (freopen(log, "a", stdout) && !freopen(log, "a", stderr))
         printf("[BOOT] RECOMP_STDIO_LOG: stderr NOT redirected\n");
 }
+#endif
 
-/* One directory level at a time; RECOMP_HDD_DIR may name a folder whose
- * parents do not exist yet (a fresh install's data root). */
+/* Outside the table's #ifdef: upstream's toolkit (no environment table)
+ * creates its saves folder with it too. */
 static void make_one_dir(const char *path)
 {
 #if defined(_WIN32)
@@ -143,6 +146,9 @@ static void make_one_dir(const char *path)
 #endif
 }
 
+#ifdef BO3_TOOLKIT_ENV_TABLE
+/* One directory level at a time; RECOMP_HDD_DIR may name a folder whose
+ * parents do not exist yet (a fresh install's data root). */
 static void make_dirs(const char *path)
 {
     char buf[BO3_PATH_MAX];
@@ -168,10 +174,8 @@ static BOOL load_xbe(const char *path, void **out_data, size_t *out_size)
     long size;
     void *data;
 
-    if (!f) {
-        fprintf(stderr, "Cannot open XBE: %s\n", path);
+    if (!f)
         return FALSE;
-    }
     fseek(f, 0, SEEK_END);
     size = ftell(f);
     fseek(f, 0, SEEK_SET);
@@ -883,10 +887,31 @@ static void host_enhance_init(void)
 #endif
 }
 
+/* ── Startup failures ──────────────────────────────────────── */
+
+static int s_headless;
+
+/* A required startup step failed: say which, and what to do, on stderr on
+ * every host -- and in a dialog on Windows, where the GUI-subsystem exe has
+ * no console and a launch from the bundle or Explorer would otherwise end
+ * without a word. --headless (or RECOMP_HEADLESS) means no dialog: one would
+ * wait for a click nobody can give. */
+static void host_report_fatal(const char *step, const char *detail)
+{
+    fprintf(stderr, "[FATAL] %s: %s\n", step, detail);
+    fflush(stderr);
+#if defined(_WIN32)
+    if (!s_headless && !getenv("RECOMP_HEADLESS"))
+        MessageBoxA(NULL, detail, "Burnout 3: Takedown", MB_ICONERROR);
+#endif
+}
+
 /* ── Boot sequence (shared) ────────────────────────────────── */
 
 static const char *s_xbe_path = BO3_XBE_DEFAULT;
 static const char *s_game_dir = BO3_GAME_DIR, *s_save_dir = BO3_SAVE_DIR;
+/* RECOMP_GAME_FILES when it named s_xbe_path, for the load failure. */
+static const char *s_game_env;
 
 static int host_main(void)
 {
@@ -904,13 +929,28 @@ static int host_main(void)
 
     printf("=== Burnout 3: Takedown (Xbox) - Static Recompilation ===\n");
 
-    if (!load_xbe(s_xbe_path, &xbe_data, &xbe_size))
+    if (!load_xbe(s_xbe_path, &xbe_data, &xbe_size)) {
+        char detail[BO3_PATH_MAX + 200];
+        /* Name where the path came from: a launcher's RECOMP_GAME_FILES
+         * points at the install, upstream's default at the working dir. */
+        if (s_game_env)
+            snprintf(detail, sizeof detail,
+                     "Failed to load %s (from RECOMP_GAME_FILES=%s).",
+                     s_xbe_path, s_game_env);
+        else
+            snprintf(detail, sizeof detail,
+                     "Failed to load %s. Run from the folder that holds "
+                     BO3_GAME_DIR BO3_SEP ", or set RECOMP_GAME_FILES to "
+                     "the game files folder.", s_xbe_path);
+        host_report_fatal("load XBE", detail);
         return 1;
+    }
     printf("XBE loaded: %zu bytes\n", xbe_size);
 
     if (!xbox_MemoryLayoutInit(xbe_data, xbe_size)) {
-        fprintf(stderr, "Xbox memory layout init failed "
-                        "(required VA range unavailable?)\n");
+        host_report_fatal("map Xbox memory layout",
+                          "Xbox memory layout init failed (the required "
+                          "virtual address range may be unavailable).");
         free(xbe_data);
         return 1;
     }
@@ -986,36 +1026,17 @@ int main(int argc, char **argv)
 {
     const char *record = NULL;
     unsigned seconds = 0;
+    const char *xbe_arg = NULL;
     int headless = 0, i;
 #ifdef BO3_TOOLKIT_ENV_TABLE
     static char xbe_buf[BO3_PATH_MAX];
 
     stdio_log_setup();
-    /* RECOMP_GAME_FILES and RECOMP_HDD_DIR: the packaged launchers start the
-     * game from its logs folder and name the dump and the emulated hard disk
-     * here, so an install keeps its saves outside the program files and
-     * outside the Wine prefix. Unset, the folders are upstream's, relative
-     * to the working directory. */
-    {
-        const char *g = recomp_env(RENV_GAME_FILES);
-        const char *h = recomp_env(RENV_HDD_DIR);
-        if (g && *g) {
-            s_game_dir = g;
-            if (snprintf(xbe_buf, sizeof xbe_buf, "%s" BO3_SEP "default.xbe", g)
-                >= (int)sizeof xbe_buf) {
-                fprintf(stderr, "RECOMP_GAME_FILES is too long: %s\n", g);
-                return 1;
-            }
-            s_xbe_path = xbe_buf;
-        }
-        if (h && *h)
-            s_save_dir = h;
-    }
 #endif
 
     for (i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--headless"))
-            headless = 1;
+            headless = s_headless = 1;
         else if (!strcmp(argv[i], "--record") && i + 1 < argc)
             record = argv[++i];
         else if (!strcmp(argv[i], "--seconds") && i + 1 < argc)
@@ -1025,8 +1046,37 @@ int main(int argc, char **argv)
                             "[--seconds N] [default.xbe]\n", argv[0]);
             return 2;
         } else
-            s_xbe_path = argv[i];
+            xbe_arg = argv[i];
     }
+    if (xbe_arg)
+        s_xbe_path = xbe_arg;
+#ifdef BO3_TOOLKIT_ENV_TABLE
+    /* RECOMP_GAME_FILES and RECOMP_HDD_DIR: the packaged launchers start the
+     * game from its logs folder and name the dump and the emulated hard disk
+     * here, so an install keeps its saves outside the program files and
+     * outside the Wine prefix. Unset, the folders are upstream's, relative
+     * to the working directory; a default.xbe argument still wins. After
+     * the arguments, so --headless keeps the fatal below off the screen. */
+    {
+        const char *g = recomp_env(RENV_GAME_FILES);
+        const char *h = recomp_env(RENV_HDD_DIR);
+        if (g && *g) {
+            s_game_dir = g;
+            if (!xbe_arg) {
+                if (snprintf(xbe_buf, sizeof xbe_buf, "%s" BO3_SEP "default.xbe", g)
+                    >= (int)sizeof xbe_buf) {
+                    host_report_fatal("load XBE", "the game files path "
+                                      "(RECOMP_GAME_FILES) is too long");
+                    return 1;
+                }
+                s_xbe_path = xbe_buf;
+                s_game_env = g;
+            }
+        }
+        if (h && *h)
+            s_save_dir = h;
+    }
+#endif
 
     setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);
@@ -1072,8 +1122,25 @@ int main(int argc, char **argv)
     else if (!strcmp(getenv("RECOMP_PB_EXEC"), "0"))
         env_set("RECOMP_PB_EXEC", "");
 #if defined(_WIN32)
+    /* The window. Upstream's toolkit draws only through the CPU rasteriser,
+     * which shows its frames in the framebuffer window. The fork toolkit's
+     * D3D11 backend (RECOMP_PB_BACKEND=d3d11, the bundle's default) opens a
+     * window of its own, so the framebuffer window would be a second one:
+     * it is asked for on every other backend, which is the toolkit's own
+     * test (nv2a_pb_d3d11_register_from_env, fb_window_wanted). The CPU
+     * rasteriser draws into it; null is walker-only and draws nothing, and
+     * keeps the window only because it is not d3d11 and has none of its
+     * own. */
+#ifdef BO3_TOOLKIT_ENV_TABLE
+    {
+        const char *b = recomp_env(RENV_PB_BACKEND);
+        if (!headless && !getenv("RECOMP_FB_WINDOW") && !(b && !_stricmp(b, "d3d11")))
+            env_set("RECOMP_FB_WINDOW", "1");
+    }
+#else
     if (!headless && !getenv("RECOMP_FB_WINDOW"))
         env_set("RECOMP_FB_WINDOW", "1");
+#endif
 #else
     /* The toolkit's SDL host: RECOMP_HEADLESS keeps the guest on this thread
      * with no window; otherwise xbox_HostWindowMain below opens one. */
@@ -1104,6 +1171,10 @@ int main(int argc, char **argv)
     recomp_env_reload();
 #endif
     host_enhance_init();
+#ifdef BO3_TOOLKIT_ENV_TABLE
+    /* The title bar's name; otherwise the XBE certificate's ("Burnout 3"). */
+    xbox_HostWindowSetTitle("Burnout 3: Takedown");
+#endif
 
 #if defined(_WIN32)
     return host_main();
