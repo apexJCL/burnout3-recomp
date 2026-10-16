@@ -65,8 +65,17 @@
 #include "kernel.h"
 #include "xbox_memory_layout.h"
 #include "usb/ohci.h"
-#if !defined(_WIN32)
-#include "video/video_player.h"     /* xbox_HostWindowMain */
+#ifdef BO3_TOOLKIT_ENV_TABLE          /* the toolkit fork's environment table */
+#include "platform/recomp_env.h"
+#endif
+#ifdef RECOMP_ENV_HAVE_ENHANCE_KEYS   /* the toolkit fork's enhancements layer */
+#include "enhance.h"
+#include "enhance_cfg.h"
+#endif
+#if !defined(_WIN32) || defined(BO3_TOOLKIT_ENV_TABLE)
+/* xbox_HostWindowMain (POSIX); xbox_HostWindowSetTitle (the fork toolkit,
+ * every host) */
+#include "video/video_player.h"
 #endif
 
 /* RECOMP_TLS is required: the runtime defines these thread-local, and a plain
@@ -141,6 +150,26 @@ static void make_one_dir(const char *path)
 #else
     mkdir(path, 0755);
 #endif
+}
+
+/* One directory level at a time; RECOMP_HDD_DIR may name a folder whose
+ * parents do not exist yet (a fresh install's data root). */
+static void make_dirs(const char *path)
+{
+    char buf[BO3_PATH_MAX];
+    char *p;
+
+    if (snprintf(buf, sizeof buf, "%s", path) >= (int)sizeof buf)
+        return;
+    for (p = buf; *p; p++) {
+        if ((*p == '\\' || *p == '/') && p > buf && p[-1] != ':') {
+            char c = *p;
+            *p = '\0';
+            make_one_dir(buf);
+            *p = c;
+        }
+    }
+    make_one_dir(buf);
 }
 
 static BOOL load_xbe(const char *path, void **out_data, size_t *out_size)
@@ -911,10 +940,31 @@ static DWORD WINAPI fb_window_watch(LPVOID unused)
 }
 #endif
 
+/* The toolkit fork's enhancements (render scale, present filter,
+ * fullscreen, pacing): config.default.toml beside the executable,
+ * config/config.toml over it, the environment over both, every key stock
+ * by default. The user root is the working directory: a developer runs
+ * from the repository root, as "Burnout 3 Takedown" and saves/ already
+ * assume, so their choices live in the gitignored config/config.toml; a
+ * bundle's launcher names the file with RECOMP_CONFIG. Before the guest
+ * and the window, so the backends and the presenter read settled values.
+ * Without the layer (upstream's toolkit, or -DXBOXRECOMP_ENHANCE=OFF) this
+ * is nothing. */
+static void host_enhance_init(void)
+{
+#ifdef RECOMP_ENV_HAVE_ENHANCE_KEYS
+    xbox_enhance_init(".", NULL);
+    enhance_cfg_report_unused();
+    fflush(stderr);
+#endif
+}
+
 /* ── Boot sequence (shared) ────────────────────────────────── */
 
 static const char *s_xbe_path = BO3_XBE_DEFAULT;
 static const char *s_game_dir = BO3_GAME_DIR, *s_save_dir = BO3_SAVE_DIR;
+/* RECOMP_GAME_FILES when it named s_xbe_path, for the load failure. */
+static const char *s_game_env;
 
 static int host_main(void)
 {
@@ -934,10 +984,17 @@ static int host_main(void)
 
     if (!load_xbe(s_xbe_path, &xbe_data, &xbe_size)) {
         char detail[BO3_PATH_MAX + 200];
-        snprintf(detail, sizeof detail,
-                 "Failed to load %s. Run from the folder that holds "
-                 BO3_GAME_DIR BO3_SEP ", or pass the path to default.xbe.",
-                 s_xbe_path);
+        /* Name where the path came from: a launcher's RECOMP_GAME_FILES
+         * points at the install, the default at the working directory. */
+        if (s_game_env)
+            snprintf(detail, sizeof detail,
+                     "Failed to load %s (from RECOMP_GAME_FILES=%s).",
+                     s_xbe_path, s_game_env);
+        else
+            snprintf(detail, sizeof detail,
+                     "Failed to load %s. Run from the folder that holds "
+                     BO3_GAME_DIR BO3_SEP ", or pass the path to default.xbe.",
+                     s_xbe_path);
         host_report_fatal("load XBE", detail);
         return 1;
     }
@@ -972,7 +1029,8 @@ static int host_main(void)
     xbox_kernel_init();
     /* The HDD partitions live in saves\; without the folder Partition1.img
      * cannot be created and XAPI quick-reboots at once (docs/boot.md #2). */
-    make_one_dir(s_save_dir);
+    make_dirs(s_save_dir);
+    printf("[BOOT] game files: %s; hard disk: %s\n", s_game_dir, s_save_dir);
     xbox_path_init(s_game_dir, s_save_dir);
     xbox_kernel_bridge_init();
 
@@ -1018,6 +1076,8 @@ int main(int argc, char **argv)
 {
     const char *record = NULL;
     unsigned seconds = 0;
+    const char *xbe_arg = NULL;
+    static char xbe_buf[BO3_PATH_MAX];
     int headless = 0, i;
 
     stdio_log_setup();
@@ -1038,11 +1098,44 @@ int main(int argc, char **argv)
             host_report_fatal("parse arguments", detail);
             return 2;
         } else
-            s_xbe_path = argv[i];
+            xbe_arg = argv[i];
+    }
+    if (xbe_arg)
+        s_xbe_path = xbe_arg;
+    /* RECOMP_GAME_FILES and RECOMP_HDD_DIR: the packaged launchers start the
+     * game from its logs folder and name the dump and the emulated hard disk
+     * here, so an install keeps its saves outside the program files and
+     * outside the Wine prefix. Unset, the folders are the ones above,
+     * relative to the working directory; a default.xbe argument still wins.
+     * After the arguments, so --headless keeps the fatal below off the
+     * screen. */
+    {
+        const char *g = getenv("RECOMP_GAME_FILES");
+        const char *h = getenv("RECOMP_HDD_DIR");
+        if (g && *g) {
+            s_game_dir = g;
+            if (!xbe_arg) {
+                if (snprintf(xbe_buf, sizeof xbe_buf, "%s" BO3_SEP "default.xbe", g)
+                    >= (int)sizeof xbe_buf) {
+                    host_report_fatal("load XBE", "the game files path "
+                                      "(RECOMP_GAME_FILES) is too long");
+                    return 1;
+                }
+                s_xbe_path = xbe_buf;
+                s_game_env = g;
+            }
+        }
+        if (h && *h)
+            s_save_dir = h;
     }
 
     setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);
+#ifdef BO3_TOOLKIT_ENV_TABLE
+    /* Deprecated names and bad keys found when the table was read: held
+     * until stdio is where it will stay, so they land in the log. */
+    recomp_env_flush_notes();
+#endif
 
     /* Audio has to come up for the engine to start. RenderWare creates its
      * audio device during engine start (sub_0020A540 -> DirectSoundCreate),
@@ -1077,9 +1170,20 @@ int main(int argc, char **argv)
         env_set("RECOMP_PB_EXEC", "");
 #if defined(_WIN32)
     /* The window: the CPU rasteriser shows its frames in the framebuffer
-     * window. */
+     * window. The toolkit fork's D3D11 backend (RECOMP_PB_BACKEND=d3d11)
+     * opens a window of its own, so there the framebuffer window would be a
+     * second one; it is asked for on every other backend, the fork's own
+     * test (fb_window_wanted). */
+#ifdef BO3_TOOLKIT_ENV_TABLE
+    {
+        const char *b = recomp_env(RENV_PB_BACKEND);
+        if (!headless && !getenv("RECOMP_FB_WINDOW") && !(b && !_stricmp(b, "d3d11")))
+            env_set("RECOMP_FB_WINDOW", "1");
+    }
+#else
     if (!headless && !getenv("RECOMP_FB_WINDOW"))
         env_set("RECOMP_FB_WINDOW", "1");
+#endif
     if (!headless)
         CloseHandle(CreateThread(NULL, 0, fb_window_watch, NULL, 0, NULL));
 #else
@@ -1118,6 +1222,18 @@ int main(int argc, char **argv)
         record_start(record);
     if (seconds)
         run_timer_start(seconds);
+#ifdef BO3_TOOLKIT_ENV_TABLE
+    /* The table is read once, on its first use (the notes and the backend
+     * test above); re-read it so the defaults set above reach it. Without
+     * this RECOMP_USB stays off and no pad (host or script) ever gets past
+     * Press START. */
+    recomp_env_reload();
+#endif
+    host_enhance_init();
+#ifdef BO3_TOOLKIT_ENV_TABLE
+    /* The title bar's name; otherwise the XBE certificate's ("Burnout 3"). */
+    xbox_HostWindowSetTitle("Burnout 3: Takedown");
+#endif
 
 #if defined(_WIN32)
     return host_main();

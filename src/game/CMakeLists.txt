@@ -67,6 +67,21 @@ if(MSVC)
         /DYNAMICBASE:NO /FIXED:NO /MAP /DEBUG /STACK:16777216 /OPT:NOICF /OPT:REF)
 endif()
 
+# The toolkit fork's environment table, when the toolkit has one: main.c
+# reads RECOMP_STDIO_LOG and RECOMP_PB_BACKEND through it and flushes its
+# notes. Upstream's toolkit has no recomp_env target.
+if(TARGET recomp_env)
+    target_compile_definitions(burnout3 PRIVATE BO3_TOOLKIT_ENV_TABLE)
+    target_link_libraries(burnout3 PRIVATE recomp_env)
+endif()
+
+# The enhancements layer, when the toolkit builds it (XBOXRECOMP_ENHANCE in
+# the top-level CMakeLists; the fork's recomp_env then defines
+# RECOMP_ENV_HAVE_ENHANCE_KEYS, which main.c tests).
+if(TARGET xbox_enhance)
+    target_link_libraries(burnout3 PRIVATE xbox_enhance)
+endif()
+
 # MinGW (llvm-mingw, natively or cross from macOS and Linux): the 16 MB
 # stack MSVC gets from /STACK above. With Clang (lld), also a PDB of public
 # symbols beside the exe (lld writes one even without -g) so dbghelp can
@@ -119,4 +134,27 @@ if(WIN32 AND NOT MINGW)
 else()
     set_target_properties(burnout3 PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+endif()
+
+# The option defaults the layer reads beside the executable. Copied at build
+# time, as a file that depends on the template, so a developer build has
+# the defaults layer and an edit of the template refreshes it; a bundle
+# stages the template itself (./burnout3 package). Same directory as the
+# exe rule above.
+if(TARGET xbox_enhance)
+    if(WIN32 AND NOT MINGW)
+        set(_bo3_exe_dir "${CMAKE_SOURCE_DIR}/bin")
+    else()
+        set(_bo3_exe_dir "${CMAKE_BINARY_DIR}")
+    endif()
+    add_custom_command(
+        OUTPUT ${_bo3_exe_dir}/config.default.toml
+        COMMAND ${CMAKE_COMMAND} -E copy
+                ${CMAKE_SOURCE_DIR}/packaging/config.default.toml
+                ${_bo3_exe_dir}/config.default.toml
+        DEPENDS ${CMAKE_SOURCE_DIR}/packaging/config.default.toml
+        COMMENT "config.default.toml beside burnout3")
+    add_custom_target(burnout3_config_default ALL
+        DEPENDS ${_bo3_exe_dir}/config.default.toml)
+    add_dependencies(burnout3 burnout3_config_default)
 endif()

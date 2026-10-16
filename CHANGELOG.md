@@ -40,6 +40,17 @@ and per-flip frame dumps.
   the SDL window, and `RECOMP_PB_BACKEND=metal` on a Mac for a toolkit that
   has the Metal backend. `--seconds N` now ends any run, not only a
   `--record` one.
+- Optional builds through xboxrecomp-cli: `./burnout3` (`burnout3.cmd` on
+  Windows) and `game.toml` set up a pinned toolchain, run the pipeline
+  (`analyze`, `recomp`: the same gen/ as `regen.sh`), build for Windows from
+  any host and natively on a Mac, and package an installer for Windows, a
+  `.tar` for the Steam Deck and a `.dmg` for macOS. `release-wizard.yml`
+  publishes the player wizard on a version tag. `RECOMP_GAME_FILES` and
+  `RECOMP_HDD_DIR` move the game files and the emulated hard disk, which
+  the packaged launchers use. On the xboxrecomp fork (a commented pin in
+  `game.toml`) the same tree also uses its D3D11 and Metal renderers, its
+  options layer (`config.toml`) and its environment table, and
+  `scripts/race_gate.py` checks a scripted race.
 
 ### Changed
 - `burnout3.exe` is a Windows GUI program: one window, the game's, from
