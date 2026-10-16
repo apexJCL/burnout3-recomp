@@ -34,8 +34,9 @@ and per-flip frame dumps.
   beside the game lists every option at its stock value, and
   `config/config.toml` holds the ones the player changes. Render scale
   (`[render] scale = 2`, or `RECOMP_RENDER_SCALE=2`) draws at two to four
-  times 640x480 on Metal and Direct3D 11. The present filter, fullscreen at
-  start and spin-wait pacing are options too. Every option is stock unless
+  times 640x480 on Metal and Direct3D 11. Anisotropic filtering
+  (`[render] aniso = 2..16`), the present filter, fullscreen at start and
+  spin-wait pacing are options too. Every option is stock unless
   set, and the race gate pins them stock (`race_gate.py --stock-env`).
 
 ### Changed

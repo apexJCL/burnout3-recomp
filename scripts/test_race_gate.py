@@ -577,6 +577,7 @@ def test_check_reports_a_stock_run(tmp_path):
     assert rep["enhance_config"] == "none (RECOMP_CONFIG)"
     assert rep["enhance"] == {
         "render.scale": 1,
+        "render.aniso": 0,
         "present.filter": "nearest",
         "present.fullscreen": 0,
         "present.pacing": "spin",
@@ -591,6 +592,22 @@ def test_check_a_scale_2_run_passes_only_at_scale_2(tmp_path):
     assert rep["enhance"]["render.scale"] == 2
     ok, rep = race_gate.check(run, result)
     assert not ok and "render.scale=2, want 1" in rep["failures"]
+
+
+def test_check_reads_render_aniso(tmp_path):
+    # The toolkit that adds render.aniso prints it after the scale, folded
+    # (1 is off and logs 0): 0 passes, anything else is not stock.
+    for value, ok_want in (("0", True), ("16", False)):
+        lines = [
+            x.replace("render.scale=1 ", "render.scale=1 render.aniso=%s " % value)
+            for x in STOCK_ENHANCE
+        ]
+        run, result = make_run(tmp_path / value, enhance=lines)
+        ok, rep = race_gate.check(run, result)
+        assert ok == ok_want, rep["failures"]
+        assert rep["enhance"]["render.aniso"] == int(value)
+        if not ok:
+            assert "render.aniso=16, want 0" in rep["failures"]
 
 
 def test_check_fails_a_run_that_read_a_config_file(tmp_path):
@@ -615,10 +632,11 @@ def test_check_fails_non_stock_pacing_and_a_build_without_the_layer(tmp_path):
     assert not ok and "enhancements layer" in " ".join(rep["failures"])
 
 
-def test_stock_env_pins_all_nine_toolkit_keys():
+def test_stock_env_pins_all_ten_toolkit_keys():
     assert set(race_gate.STOCK_ENV) == {
         "RECOMP_CONFIG",
         "RECOMP_RENDER_SCALE",
+        "RECOMP_RENDER_ANISO",
         "RECOMP_DISPLAY_ASPECT",
         "RECOMP_PRESENT_FILTER",
         "RECOMP_PRESENT_FULLSCREEN",

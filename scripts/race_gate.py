@@ -72,6 +72,7 @@ FIXTURE_ENV = "RACE_GATE_FIXTURE"
 STOCK_ENV = {
     "RECOMP_CONFIG": "none",
     "RECOMP_RENDER_SCALE": "1",
+    "RECOMP_RENDER_ANISO": "0",
     "RECOMP_DISPLAY_ASPECT": "4:3",
     "RECOMP_PRESENT_FILTER": "nearest",
     "RECOMP_PRESENT_FULLSCREEN": "0",
@@ -113,10 +114,11 @@ PAD_LIVE = re.compile(r'PAD: live "(.*)" at t=')
 CRASH = ("[FAULT]", "[CRASH]")
 # The layer's startup lines: the settings files read ("none (RECOMP_CONFIG)"
 # when there are none; "renamed ..."/"cannot ..." lines are about the user
-# file, not the files read), and the values in force.
+# file, not the files read), and the values in force. render.aniso sits
+# after the scale from the toolkit that adds it on; older toolkits omit it.
 ENHANCE_CONFIG = re.compile(r"^\[ENHANCE\] config: (?!renamed |cannot )(.*)$")
 ENHANCE_VALUES = re.compile(
-    r"^\[ENHANCE\] render\.scale=(\d+) present\.filter=(\S+) "
+    r"^\[ENHANCE\] render\.scale=(\d+) (?:render\.aniso=(\d+) )?present\.filter=(\S+) "
     r"present\.fullscreen=(\d+) present\.pacing=(\S+)"
 )
 
@@ -546,6 +548,8 @@ def drive(args, run):
     )
     if os.environ.get("RECOMP_DEBUG"):
         env["RECOMP_DEBUG"] += "," + os.environ["RECOMP_DEBUG"]
+    if os.environ.get("RECOMP_TRACE"):
+        env["RECOMP_TRACE"] += "," + os.environ["RECOMP_TRACE"]
     env.update(stock_env(args.render_scale))
     # The DSOUND doorbell ack: without it the boot stops after flip 2, right
     # after B3XboxFx.bin. A game default on main, a toolkit default only from
@@ -800,9 +804,10 @@ def enhance_checks(config, values, render_scale, rep, fails):
     if values is None:
         fails.append("no [ENHANCE] values line (a build without the enhancements layer?)")
         return
-    scale, filt, fullscreen, pacing = values
+    scale, aniso, filt, fullscreen, pacing = values
     rep["enhance"] = {
         "render.scale": int(scale),
+        "render.aniso": int(aniso or 0),
         "present.filter": filt,
         "present.fullscreen": int(fullscreen),
         "present.pacing": pacing,
@@ -813,6 +818,7 @@ def enhance_checks(config, values, render_scale, rep, fails):
         fails.append("the run read settings files: %s (want RECOMP_CONFIG=none)" % config)
     want = {
         "render.scale": render_scale,
+        "render.aniso": int(STOCK_ENV["RECOMP_RENDER_ANISO"]),
         "present.filter": STOCK_ENV["RECOMP_PRESENT_FILTER"],
         "present.fullscreen": int(STOCK_ENV["RECOMP_PRESENT_FULLSCREEN"]),
         "present.pacing": STOCK_ENV["RECOMP_PRESENT_PACING"],
