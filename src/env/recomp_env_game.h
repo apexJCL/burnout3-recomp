@@ -23,9 +23,14 @@
 #define RECOMP_ENV_GAME_H
 
 /* This game's own keys, added to the toolkit's table (same row format:
- * X(ID, TIER, NAME, LEGACY, HELP); rows in docs/running.md). The packaged
- * launchers set both: they start the game from its logs folder, so the dump
- * and the emulated hard disk cannot be found from the working directory.
+ * X(ID, TIER, NAME, LEGACY, HELP); rows in docs/running.md).
+ * RECOMP_GAME_FILES and RECOMP_HDD_DIR, which the packaged launchers set
+ * because they start the game from its logs folder, are toolkit rows since
+ * b3-public-release (every game's launcher sets them), and the toolkit then
+ * defines RECOMP_ENV_HAVE_FOLDER_ROWS. A key defined twice does not compile,
+ * so the two rows stay here for an older toolkit (the public tag the public
+ * game.toml pins); drop them once the pin is past the toolkit merge. main.c
+ * holds their defaults, upstream's folders, either way.
  *
  * The enhancements layer's keys (RECOMP_CONFIG, RECOMP_RENDER_SCALE,
  * RECOMP_PRESENT_*, ...) are the toolkit's own rows: CMakeLists.txt turns
@@ -33,9 +38,13 @@
  * recomp_env target and adds them to the table. A key of this game's own
  * for the layer (cat's fps.mode is one) would go here as a CONFIG row named
  * RECOMP_ + the dotted key, read in main.c's host_enhance_init. */
+#ifndef RECOMP_ENV_HAVE_FOLDER_ROWS
 #define RECOMP_ENV_GAME_KEYS(X) \
     X(GAME_FILES, CONFIG, "RECOMP_GAME_FILES", NULL, "game files directory (default: Burnout 3 Takedown in the working directory)") \
     X(HDD_DIR,    CONFIG, "RECOMP_HDD_DIR",    NULL, "emulated hard disk: partition images, saves (default: saves in the working directory)")
+#else
+#define RECOMP_ENV_GAME_KEYS(X)
+#endif
 
 #define RECOMP_ENV_GAME_DEFAULTS(D) \
     D(VBLANK,     "1") \
