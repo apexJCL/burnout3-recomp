@@ -10,6 +10,9 @@
 scale = 1                 # internal resolution factor: 1 (stock 640x480), 2, 3, 4
                           # (Metal and Direct3D 11; the software renderer
                           # ignores it)
+aniso = 0                 # anisotropic filtering on mipmapped textures: 0 (stock,
+                          # off) or 2..16; sharper ground and walls at a distance
+                          # (Metal and Direct3D 11)
 
 [display]
 aspect = "4:3"            # only 4:3 so far
