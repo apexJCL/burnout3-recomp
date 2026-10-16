@@ -18,22 +18,22 @@ title_id = 0x4541005B
 sha256 = ["9f497acd82adb8edfb72cc31aeeb35010b45d32b13a3f1fc6540717ff24d13f9"]
 
 # The CLI at a release tag. The commit locks the tag: a tag that names
-# another commit (moved, re-pushed) is refused. 0.5.0 and newer stage
-# packaging/config.default.toml and refuse the old enhance.toml.default.
+# another commit (moved, re-pushed) is refused. 0.7.5 and newer build the
+# player wizard ([wizard]) and publish a release with its CHANGELOG notes.
 [cli]
-tag = "v0.5.1"
-commit = "2b95e720b0890cc835cab0fc3e2e11b4494aefec"
+tag = "v0.7.5"
+commit = "948657e9faabe069554694db1e230e95d6b9516d"
 url = "https://github.com/apexJCL/xboxrecomp-cli.git"
 
 [toolkit]
 # The same toolkit as BLiNX 2: both games move their pins together.
 url = "https://github.com/apexJCL/xboxrecomp.git"
-# The local integration branch's merge of the one-window guard and the
-# folder rows (b3-public-release P1), not public yet: a build uses a
-# developer checkout (XBOXRECOMP_DIR) at this commit. The push round puts
-# the public sha and tag here.
+# The local integration branch (the one-window guard and folder rows,
+# render.aniso, Partition1\CACHE out of the game folder), not public yet:
+# a build uses a developer checkout (XBOXRECOMP_DIR) at this commit. The
+# push round puts the public sha and tag here.
 branch = "posix-host/portability"
-commit = "9024725512148ca77fcdfd06db00c10d65ee77cb"
+commit = "f4a3be97804cecf09177cf08b671c8249c9ad796"
 
 [toolchain]
 llvm_mingw = "20260922"
@@ -123,3 +123,52 @@ crash_tag = "[FAULT]"
 # Local output of the upstream flow and the A/B probes (rsync does not read
 # .gitignore): never sent to the host.
 sync_excludes = ["/bin/", "/runs/", "/_local/", "/saves/", "/Play Burnout 3.cmd", "/setup.log", "/TESTING.md"]
+
+[wizard]
+repo = "https://github.com/apexJCL/burnout3.git"
+targets = ["windows", "steamos", "macos"]
+# No icon: the CLI's generic gamepad glyph. Burnout, EA and Criterion marks
+# and game art are not ours to use.
+# No [[wizard.fetch]] entries: the clone carries everything else the build
+# needs, and the CLI fetches the toolkit, llvm-mingw and NSIS itself by
+# the pins in [cli], [toolkit] and its setup-pins.json.
+
+# The wizard's open-source credits (xboxrecomp-cli docs/wizard.md,
+# Credits): this fork is ours, listed first, before the CLI's repos.
+[[wizard.credit]]
+name = "burnout3"
+role = "this recompilation of Burnout 3: Takedown for PC and Mac"
+license = "MIT"
+url = "https://github.com/apexJCL/burnout3"
+own = true
+
+# The project this fork continues. The CLI lists a game's other entries
+# after its own group (the CLI, the toolkit fork and upstream's toolkit),
+# at the head of the third-party list.
+[[wizard.credit]]
+name = "burnout3 (upstream)"
+role = "the original recompilation of Burnout 3, by sp00nz"
+license = "MIT"
+url = "https://github.com/sp00nznet/burnout3"
+
+# Only the basic tweaks: pacing, the present filter and anisotropic
+# filtering stay in config.default.toml, which the Options page points to.
+[[wizard.option]]
+key = "scale"
+label = "Render scale"
+hint = "Draws the game sharper on a big screen; needs a faster graphics card."
+kind = "range"
+# The toolkit's render.scale stops at 4 (SCALE_MAX in src/enhance/enhance.c).
+min = 1
+max = 4
+default = 1
+config = "render.scale"
+labels = { "1" = "640×480, as on the Xbox", "2" = "1280×960", "3" = "1920×1440", "4" = "2560×1920, the sharpest" }
+
+[[wizard.option]]
+key = "fullscreen"
+label = "Start fullscreen"
+hint = "Off by default: on the Steam Deck's Desktop Mode, add the game to Steam with the Gamepad template instead."
+kind = "bool"
+default = false
+config = "present.fullscreen"

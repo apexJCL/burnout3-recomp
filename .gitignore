@@ -71,3 +71,32 @@ src/game/recomp/.gen-regenerating
 # The developer's own options (the game reads config/config.toml from the
 # working directory over the build's config.default.toml); never committed.
 config/config.toml
+
+# From the `xbr new` scaffold (CLI 0.7.5): what `import` leaves beside the
+# game files while it replaces them, the bundles' by-products, and game
+# data, captures and game output anywhere in the tree. The images in
+# docs/screenshots (upstream's) and docs/images (the README's, of this
+# build) are the only pictures tracked.
+/Burnout 3 Takedown.partial/
+/Burnout 3 Takedown.old/
+*.dmg
+*.nsi
+*.tar
+*.xbe
+*.xpr
+*.xwb
+*.adx
+*.sfd
+*.ipk
+*.wav
+*.png
+!docs/screenshots/*.png
+!docs/images/*.png
+*.ico
+*.icns
+*.ppm
+*.raw
+*.sav
+*.xsv
+UDATA/
+TDATA/
