@@ -2,7 +2,7 @@
 
 All notable changes to this project are recorded here, newest first. The
 format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-Releases of this fork (apexJCL/burnout3) use calendar versions,
+Releases of this fork (apexJCL/burnout3-recomp) use calendar versions,
 `YYYY.MM.N` (the tag `v2026.10.0-rc.1` is the section
 `## [2026.10.0-rc.1] - YYYY-MM-DD`), not SemVer. A release tag's section is
 its GitHub release notes: .github/workflows/release-wizard.yml stops when

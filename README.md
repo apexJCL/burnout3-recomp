@@ -7,13 +7,13 @@ Proton) and macOS. The game's own x86 code is lifted to C by the
 its real entry point and runs its own menus, races and renderer on the toolkit's
 Xbox runtime. No game logic or screen is hand-written.
 
-This is [apexJCL/burnout3](https://github.com/apexJCL/burnout3), a fork of
+This is [apexJCL/burnout3-recomp](https://github.com/apexJCL/burnout3-recomp), a fork of
 [sp00nznet/burnout3](https://github.com/sp00nznet/burnout3) by sp00nz, which keeps
 upstream's history and build. The fork builds the game through
 [xboxrecomp-cli](https://github.com/apexJCL/xboxrecomp-cli) against the toolkit fork
 [apexJCL/xboxrecomp](https://github.com/apexJCL/xboxrecomp), which adds Direct3D 11
 and Metal renderers, a macOS host and an options file; it publishes a build
-wizard for players in its [releases](https://github.com/apexJCL/burnout3/releases).
+wizard for players in its [releases](https://github.com/apexJCL/burnout3-recomp/releases).
 
 **Generated source is not distributed.** The repository holds the build glue, the
 per-title data and the docs. You supply your own disc image; the recompiler runs
@@ -85,7 +85,7 @@ only what is.
 
 ## Play it: the build wizard
 
-Each [release](https://github.com/apexJCL/burnout3/releases) carries a small
+Each [release](https://github.com/apexJCL/burnout3-recomp/releases) carries a small
 program for Windows, macOS and Linux (Steam Deck included): download yours,
 point it at your own Burnout 3: Takedown disc image, pick the render scale and
 whether to start fullscreen, and it builds and installs the game for you. It runs

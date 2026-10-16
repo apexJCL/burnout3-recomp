@@ -124,7 +124,7 @@ crash_tag = "[FAULT]"
 sync_excludes = ["/bin/", "/runs/", "/_local/", "/saves/", "/Play Burnout 3.cmd", "/setup.log", "/TESTING.md"]
 
 [wizard]
-repo = "https://github.com/apexJCL/burnout3.git"
+repo = "https://github.com/apexJCL/burnout3-recomp.git"
 targets = ["windows", "steamos", "macos"]
 # No icon: the CLI's generic gamepad glyph. Burnout, EA and Criterion marks
 # and game art are not ours to use.
@@ -138,7 +138,7 @@ targets = ["windows", "steamos", "macos"]
 name = "burnout3"
 role = "this recompilation of Burnout 3: Takedown for PC and Mac"
 license = "MIT"
-url = "https://github.com/apexJCL/burnout3"
+url = "https://github.com/apexJCL/burnout3-recomp"
 own = true
 
 # The project this fork continues. The CLI lists a game's other entries
