@@ -10,13 +10,17 @@ the tagged commit has none.
 
 ## [Unreleased]
 
+## [2026.10.0-rc.1] - 2026-10-15
+
 The fork's first release: the build wizard for players, one window on
 Windows and the Steam Deck, and the macOS build, on the xboxrecomp fork's
 Direct3D 11 and Metal renderers.
 
 The project now runs on the shared xboxrecomp runtime instead of its own fork,
-and the title boots and plays through its own code. Needs xboxrecomp
-#138-#156 (on its `main`): the vertex-program interpreter, register combiners,
+and the title boots and plays through its own code. It builds on the
+xboxrecomp fork (apexJCL/xboxrecomp `blinx2/portability`, tag
+`blinx2-v0.4.0`), which carries upstream xboxrecomp #138-#156: the
+vertex-program interpreter, register combiners,
 x87 precision control, SSE compare predicates, multi-pad USB, the DPC queue lock
 and per-flip frame dumps.
 
