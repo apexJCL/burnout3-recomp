@@ -1,10 +1,18 @@
 # Changelog
 
-All notable changes to this project are recorded here. The format follows
-[Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
-[SemVer](https://semver.org/).
+All notable changes to this project are recorded here, newest first. The
+format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+Releases of this fork (apexJCL/burnout3) use calendar versions,
+`YYYY.MM.N` (the tag `v2026.10.0-rc.1` is the section
+`## [2026.10.0-rc.1] - YYYY-MM-DD`), not SemVer. A release tag's section is
+its GitHub release notes: .github/workflows/release-wizard.yml stops when
+the tagged commit has none.
 
 ## [Unreleased]
+
+The fork's first release: the build wizard for players, one window on
+Windows and the Steam Deck, and the macOS build, on the xboxrecomp fork's
+Direct3D 11 and Metal renderers.
 
 The project now runs on the shared xboxrecomp runtime instead of its own fork,
 and the title boots and plays through its own code. Needs xboxrecomp
@@ -38,10 +46,25 @@ and per-flip frame dumps.
   (`[render] aniso = 2..16`), the present filter, fullscreen at start and
   spin-wait pacing are options too. Every option is stock unless
   set, and the race gate pins them stock (`race_gate.py --stock-env`).
+- The build wizard: a small program for Windows, macOS and Linux (Steam Deck
+  included), attached to every release, that builds and installs the game
+  from your own disc image. It asks for the render scale and whether to start
+  fullscreen.
+- Releases on GitHub, with these notes and the wizard downloads; `-rc.`
+  tags are pre-releases.
+- `-DBO3_CONSOLE=ON` builds the console program, which prints to the
+  terminal, for debugging from a command line.
+- A dialog says what failed when the game cannot boot (no game files, a
+  wrong path).
 
 ### Changed
 - The build links the xboxrecomp runtime libraries (`../xboxrecomp`) instead of
   in-tree copies.
+- One window on Windows and under Proton: the game window, titled
+  "Burnout 3: Takedown". It opened up to three (a console, a blank
+  framebuffer window and the game). The exe is now a Windows GUI program.
+- Fullscreen is off by default. On a Steam Deck, start the game from Steam
+  with the Gamepad template (see the bundle's README).
 - Format and engine research notes moved to `docs/research/`.
 
 ### Removed
@@ -60,6 +83,9 @@ and per-flip frame dumps.
 ### Fixed
 - The README described a build that did not run (#1, reported by
   [@VincxBlox](https://github.com/VincxBlox)).
+- The picture flickered and changed height at the start of a race.
+- The game no longer writes the Xbox cache files (`CACHE/`) into your game
+  files folder; they go with the saves.
 - Sound effects (menu select, turbo, engines) played as fizz and noise. The
   game loads them into its heap, whose physical addresses are also handed out
   as contiguous memory, and the APU read the contiguous copy. The toolkit's APU

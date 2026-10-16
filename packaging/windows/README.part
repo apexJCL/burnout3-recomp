@@ -25,8 +25,13 @@ stock value. Copy a line from it into your config.toml and change it there,
 for example "scale = 2" under "[render]" to draw at twice the resolution.
 An update replaces config.default.toml but never touches your file.
 
-Note: this build is tested under Proton on Linux only, not on native
-Windows.
+The game starts in a window. "fullscreen = true" under "[present]" in
+your config.toml starts it fullscreen.
+
+Note: this build is played and tested under Proton on Linux. On native
+Windows 11 it has been checked to start in one window and reach Press
+START, no further. On a Steam Deck use the steamos bundle: its README has
+the Deck notes.
 
 Controls
 --------
