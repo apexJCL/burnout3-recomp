@@ -1,7 +1,7 @@
 # b3-macos-host: Burnout 3 boots and plays on macOS (Metal)
 
-Status: written by Fable (2026-10-09, BLX-46, the dispatchable twin of
-BLX-43), so no separate spec review. Facts were checked against the code at
+Status: written by Fable (2026-10-09, the dispatchable twin of the
+macOS-host item), so no separate spec review. Facts were checked against the code at
 these commits:
 - b3 `main` d2c4335 (`b3/fork-glue` through xbr; `src/game/main.c` is
   Win32-only: `windows.h`, VEH, dbghelp, toolhelp);
@@ -71,7 +71,7 @@ expected; if one proves necessary it gets its own worktree off
 - A macOS bundle, launcher or `package macos` target. The developer build
   (`build/burnout3`) is the deliverable.
 - Sound on the Mac. Runs use `SDL_AUDIODRIVER=dummy`; title and menu music
-  is silent anyway (BLX-45, deprioritised).
+  is silent anyway (deprioritised).
 - Keyboard or host-pad mapping for Burnout 3 (`RECOMP_PAD_SCRIPT` and
   `RECOMP_PAD_LIVE` drive the pads; the input spike is parked).
 - The on-demand thread dump cat has (`RECOMP_THREAD_DUMP`); the toolkit's

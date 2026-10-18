@@ -145,8 +145,8 @@ console build for it.
 - Opening the upstream PR to `sp00nznet/burnout3`: P4 plans it (D7, U8);
   it is opened only on the user's go, after the first public push, tested
   per CLAUDE.md's upstream-PR rule.
-- The race-start jitter (BLX-144, toolkit `fix/present-mode-height`
-  316377d) and the occlusion reports (BLX-145, `fix/occ-reports` d6ae77e):
+- The race-start jitter (toolkit `fix/present-mode-height` 316377d) and
+  the occlusion reports (`fix/occ-reports` d6ae77e):
   other changes. 316377d edits `xbox_FramebufferWindowStart` itself, so
   P1's guard is a single early return and the merge order is checked with
   `git merge-tree` (design D1).
