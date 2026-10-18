@@ -3,7 +3,9 @@ Install and update (Steam Deck or a Linux gaming PC, from Desktop Mode)
 This bundle runs on a Steam Deck with stock SteamOS, and on a Linux gaming
 distribution that ships umu-run. The game runs under Proton through umu-run
 (umu-launcher): a stock Steam Deck does not have it, and the installer
-offers to download it (see "umu-run" below).
+offers to download it (see "umu-run" below). The installer also downloads
+@PROTON_VERSION@, the Proton this bundle pins (about 560 MB, once; see
+"Proton" below).
 
 Copy @APP@-@VERSION@-steamos.tar to the PC (USB stick, network share,
 scp), unpack it (Dolphin: right-click > Extract > Extract archive here, or
@@ -19,22 +21,26 @@ unpacked folder can be deleted after the install.
                             last 3 versions, saves untouched
   ./install.sh rollback     back to the previous version
   ./install.sh status       what is installed, where the saves are, which
-                            umu-run the game uses
+                            umu-run and Proton the game uses
   ./install.sh list         installed versions
   ./install.sh uninstall    removes the program; keeps hdd/, config/, logs/
   Options: --root DIR (default @DEFAULT_ROOT@), --keep N (default 3),
            --import-saves DIR (copy an old save root into an empty hdd/),
-           --fetch-umu, --umu-dir DIR (below).
+           --fetch-umu, --umu-dir DIR, --no-proton (below).
 
 Play from Game Mode: the shortcut is "@APP@" in your library. Leave
 "Force the use of a specific Steam Play compatibility tool" OFF for it: the
-launcher starts Proton itself (umu-run, GE-Proton).
+launcher starts Proton itself (umu-run, @PROTON_VERSION@).
 
-The first launch downloads the Steam Linux Runtime and GE-Proton (about
-1 GB) and creates the Wine prefix, which takes a few minutes. A window
-(or, in Game Mode, a notification) says so, and closes when the game
-starts. Later launches are quick. The prefix (@DEFAULT_ROOT@/prefix) holds
+The first launch downloads the Steam Linux Runtime (about 500 MB) and
+creates the Wine prefix, which takes a few minutes. A window (or, in Game
+Mode, a notification) says so, and closes when the game starts. The first
+launch after each install may update the runtime, with the same notice;
+other launches download nothing. The prefix (@DEFAULT_ROOT@/prefix) holds
 nothing of value and can be deleted; it is recreated.
+
+One launch at a time: launching the game again while it starts or runs
+only says so ("already starting or running").
 
 If Steam was not open during the install, add the shortcut by hand:
 Steam (Desktop Mode) > Games > Add a Non-Steam Game to My Library > Browse >
@@ -51,8 +57,22 @@ the same without asking. The copy goes to ~/.local/share/xboxrecomp/umu
 every game installed this way shares it. The launcher finds it there in
 Game Mode too, whose PATH lacks ~/.local/bin.
 
+Proton
+------
+The game runs on @PROTON_VERSION@, the one release this bundle pins. The
+installer puts it in ~/.local/share/Steam/compatibilitytools.d (checked
+against its sha256), unless it is there already, and the launcher uses it,
+so no launch downloads a Proton. A later bundle may pin a newer one; its
+install fetches it, and older ones stay there for you to remove.
+PROTONPATH=GE-Proton in config/launch.env follows the newest GE-Proton
+instead (umu-run then checks for, and downloads, a new release at every
+launch); PROTONPATH=/path/to/a/proton picks any other. With your own
+PROTONPATH, `./install.sh --no-proton` skips the download.
+
 Troubleshooting
 ---------------
+- "@PROTON_VERSION@ is not installed" at launch: run `./install.sh` in
+  the unpacked bundle folder again, from Desktop Mode.
 - "umu-run is not installed" (a notification at launch, or from
   install.sh): run `./install.sh --fetch-umu` in the unpacked bundle
   folder, from Desktop Mode. `./install.sh status` shows which umu-run the

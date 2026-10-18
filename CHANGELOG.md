@@ -10,6 +10,15 @@ the tagged commit has none.
 
 ## [Unreleased]
 
+### Fixed
+- Steam Deck and Linux PC bundles pin their Proton: the installer fetches
+  GE-Proton11-7 (checked against its sha256) and the launcher runs it, so
+  no launch follows the newest GE-Proton. GE-Proton11-9 starts no game on a
+  Deck since the October 2026 Steam Linux Runtime update, and lost the pads
+  before that. The launcher also refuses a second launch while the game
+  starts or runs. These come from xboxrecomp-cli v0.7.7, which the build now
+  pins; the shared launcher defaults no longer set PROTONPATH=GE-Proton.
+
 ## [2026.10.0-rc.1] - 2026-10-15
 
 The fork's first release: the build wizard for players, one window on
