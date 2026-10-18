@@ -19,7 +19,9 @@ sha256 = ["9f497acd82adb8edfb72cc31aeeb35010b45d32b13a3f1fc6540717ff24d13f9"]
 
 # The CLI at a release tag. The commit locks the tag: a tag that names
 # another commit (moved, re-pushed) is refused. 0.7.5 and newer build the
-# player wizard ([wizard]) and publish a release with its CHANGELOG notes.
+# player wizard ([wizard]) and publish a release with its CHANGELOG notes;
+# 0.7.7 is the floor, since its SteamOS launcher pins the Proton the game
+# runs on (GE-Proton11-7) instead of following the newest GE-Proton.
 [cli]
 tag = "v0.7.7"
 commit = "f34648a8363b94752c05afd4b6a5012afdf9dd26"
