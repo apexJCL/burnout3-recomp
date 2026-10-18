@@ -10,6 +10,10 @@ the tagged commit has none.
 
 ## [Unreleased]
 
+## [2026.10.0-rc.2] - 2026-10-17
+
+A fix for the Steam Deck: the game starts again under Proton.
+
 ### Fixed
 - Steam Deck and Linux PC bundles pin their Proton: the installer fetches
   GE-Proton11-7 (checked against its sha256) and the launcher runs it, so
@@ -18,6 +22,11 @@ the tagged commit has none.
   before that. The launcher also refuses a second launch while the game
   starts or runs. These come from xboxrecomp-cli v0.7.7, which the build now
   pins; the shared launcher defaults no longer set PROTONPATH=GE-Proton.
+
+### Changed
+- The release workflow leaves a release made by hand, or already published,
+  as it is: it edits only a draft it made itself, and attaches the wizard
+  assets to any other release only when it has none of them.
 
 ## [2026.10.0-rc.1] - 2026-10-15
 
