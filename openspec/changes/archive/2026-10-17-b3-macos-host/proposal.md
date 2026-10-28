@@ -1,6 +1,6 @@
 # b3-macos-host: Burnout 3 boots and plays on macOS (Metal)
 
-Status: written by Fable (2026-10-09, the dispatchable twin of the
+Status: written by the reviewer (2026-10-09, the dispatchable twin of the
 macOS-host item), so no separate spec review. Facts were checked against the code at
 these commits:
 - b3 `main` d2c4335 (`b3/fork-glue` through xbr; `src/game/main.c` is

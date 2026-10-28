@@ -113,7 +113,6 @@ static void env_set(const char *name, const char *value)
 #endif
 }
 
-#ifdef BO3_TOOLKIT_ENV_TABLE
 /* RECOMP_STDIO_LOG=<path>: stdout and stderr into a file. Proton drops a
  * game's stdio whatever its subsystem, so the bench's game-stdio.log, its
  * fault check and a packaged launcher's logs/ all read this file. Truncate
@@ -122,7 +121,13 @@ static void env_set(const char *name, const char *value)
  * descriptor to dup onto). Before anything prints. */
 static void stdio_log_setup(void)
 {
+#ifdef BO3_TOOLKIT_ENV_TABLE
     const char *log = recomp_env(RENV_STDIO_LOG);
+#else
+    /* Upstream's toolkit has no environment table and no stdio log of its
+     * own, so the same variable is read here directly. */
+    const char *log = getenv("RECOMP_STDIO_LOG");
+#endif
     FILE *trunc;
 
     if (!log || !*log)
@@ -133,7 +138,6 @@ static void stdio_log_setup(void)
     if (freopen(log, "a", stdout) && !freopen(log, "a", stderr))
         printf("[BOOT] RECOMP_STDIO_LOG: stderr NOT redirected\n");
 }
-#endif
 
 /* Outside the table's #ifdef: upstream's toolkit (no environment table)
  * creates its saves folder with it too. */
@@ -1030,9 +1034,9 @@ int main(int argc, char **argv)
     int headless = 0, i;
 #ifdef BO3_TOOLKIT_ENV_TABLE
     static char xbe_buf[BO3_PATH_MAX];
+#endif
 
     stdio_log_setup();
-#endif
 
     for (i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--headless"))
@@ -1098,11 +1102,26 @@ int main(int argc, char **argv)
     if (!getenv("RECOMP_AC97_READY"))
         env_set("RECOMP_AC97_READY", "1");
 #ifndef BO3_TOOLKIT_ENV_TABLE
-    /* With a toolkit environment table the doorbell default is "auto", the
-     * toolkit default (the fork's allocator puts the block
-     * elsewhere); setting the variable here would override it. */
-    if (!getenv("RECOMP_APU_DSP_ACK"))
-        env_set("RECOMP_APU_DSP_ACK", "0x825F8810");
+    /* The doorbell is left to the toolkit's own default, "auto", which
+     * finds it from GPSADDR on either toolkit. A fixed address went stale
+     * once upstream's contiguous allocator moved the block: DirectSound then
+     * spins on an unacknowledged command and the boot stops after flip 2. */
+#if defined(_WIN32)
+    /* Under Wine/Proton the fixed guest bases put the tiled aperture
+     * (0xF0000000) and the top RAM mirrors on host ranges Wine already
+     * holds (error 487), and the first tiled surface write faults. Upstream
+     * reserves the whole guest window with placeholders on request; it is
+     * asked for here only under Wine, where it has been tested. */
+    if (!getenv("RECOMP_WIN_PLACEHOLDER")
+        && GetProcAddress(GetModuleHandleA("ntdll.dll"), "wine_get_version"))
+        env_set("RECOMP_WIN_PLACEHOLDER", "1");
+#endif
+    /* Vblank delivery. Upstream's toolkit since v0.16 delivers no vblank
+     * interrupts unless RECOMP_VBLANK is set, and without them the boot
+     * stops after flip 1 (the title waits on its vblank callback). "1" is
+     * the free-running tick of earlier releases. */
+    if (!getenv("RECOMP_VBLANK"))
+        env_set("RECOMP_VBLANK", "1");
 #endif
     /* The pad. Without the USB controller model there is no way past
      * "Press START"; with it the host's XInput pad (or RECOMP_PAD_SCRIPT /

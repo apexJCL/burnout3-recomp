@@ -45,3 +45,6 @@ ignore = [
               # would be churn, and the unsafe fix can change a tuple argument's meaning
 ]
 
+[tool.pytest.ini_options]
+testpaths = ["scripts"]
+

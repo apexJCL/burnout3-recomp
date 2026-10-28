@@ -1,11 +1,11 @@
 # b3-public-release: Burnout 3 on the CLI scaffold, one window, its own wizard, public releases
 
-Status: drafted by Fable (2026-10-15), revised after the Opus review of
+Status: drafted by the reviewer (2026-10-15), revised after the review of
 c3aa8cf. Successor of `b3-on-xbr` (phases 1-3 merged in b3; see design
 D0). Facts checked against:
 - b3 `main` d6eab90 (19 local commits on upstream `sp00nznet/burnout3`
   79b578d, i.e. `origin/main..main`; push URL disabled); the only live
-  branch is xb-upstream's `fix/race-gate-aniso` edb0835
+  branch is the Burnout 3 session's `fix/race-gate-aniso` edb0835
   (config.default.toml +3, `scripts/race_gate.py` and its test; nothing in
   main.c, CMake, the window code or game.toml);
 - xboxrecomp-cli `main` 489196b (v0.7.4 at 2e7c207, docs after it) and

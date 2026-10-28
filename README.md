@@ -33,7 +33,7 @@ at about 14 fps and races at 2–4 fps.
 | You play on | Bundle | Graphics | Audio | Input | Status |
 |---|---|---|---|---|---|
 | Steam Deck (stock SteamOS), or a Linux gaming PC | `steamos` (the Windows build, run under Proton through `umu-run`) | Direct3D 11 (DXVK) | XAudio2 (FAudio) | Controller (XInput), two pads | Plays, in one window. The Deck is the regular test machine: a scripted race runs at about 57 frames a second. Fullscreen is off by default: add the game to Steam with the Gamepad template (the bundle's README says how). |
-| macOS (Apple silicon) | `macos` (`.dmg`) | Metal | SDL2 (CoreAudio) | Controller (SDL GameController) and keyboard | Plays: the same scripted race runs at about 55 frames a second. The title screen and menu music is silent. |
+| macOS (Apple silicon) | `macos` (`.dmg`) | Metal | SDL3 (CoreAudio) | Controller (SDL GameController) and keyboard | Plays: the same scripted race runs at about 55 frames a second. The title screen and menu music is silent. |
 | Windows x86-64 | `windows` (a setup program) | Direct3D 11 | XAudio2 | Controller (XInput), two pads | Builds and installs. On native Windows 11 it has been checked to start in one window and reach Press START; it is played and tested under Proton. |
 
 The game runs at its own frame rate and 4:3, as on the Xbox. Render scale 2 to

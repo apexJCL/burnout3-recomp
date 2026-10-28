@@ -50,7 +50,7 @@ one optional merge that degrades cleanly on upstream's toolkit. The index
 tells the owner what to review first and what Burnout 3 does today.
 
 Non-goals: changing upstream's route; offering fork publishing tools;
-toolkit PRs (xb-upstream's).
+toolkit PRs (the Burnout 3 session's).
 
 ## Decisions
 
@@ -107,7 +107,7 @@ own.
 |---|---|---|
 | 0x00014C80 and five more functions found | only with #186 | A seeds all six. Once #186 merges the seeds are redundant and harmless (same starts). A's gate checks that the fork pin's gen is unchanged. |
 | A second Windows window suppressed | upstream has no D3D11 backend, so its only Windows presenter is the GDI window, which `RECOMP_FB_WINDOW` opens | No guard is needed. B keeps `RECOMP_FB_WINDOW=1` whenever not headless, as 79b578d does. D's "every backend but d3d11" rule sits under `BO3_TOOLKIT_ENV_TABLE` (fork pin only). The toolkit guard goes upstream with the D3D11 backend (G6), not before. |
-| `XINPUT1_4.dll` under MinGW | no | C's rewrite (D2) fixes it from b3. If xb-upstream sends the fork's d4b7028 upstream, the rewrite matches nothing and can go. |
+| `XINPUT1_4.dll` under MinGW | no | C's rewrite (D2) fixes it from b3. If the Burnout 3 session sends the fork's d4b7028 upstream, the rewrite matches nothing and can go. |
 | `recomp_env`, `xbox_enhance`, Metal, D3D11, spin waits | no | D carries them behind `if(TARGET ...)` and `#ifdef` guards. On upstream's pin they do nothing (D4). |
 | #192 (pacing) | open, being refreshed | Nothing here depends on it. |
 | TitleCache (`E:\CACHE`) | on v0.14.0 the game writes `LocalCache*.bin` into its game folder; sp00nznet/xboxrecomp#206 (head c18d741) moves them to `<save>/TitleCache` | Not a b3 PR. A's body and the index cite it as a known toolkit issue. The fork has it too (70c4371, not public yet), so b3's next fork pin moves the files to `<save>/TitleCache` with no migration. |
@@ -137,7 +137,7 @@ ack"** (1 commit, new work).
   CHANGELOG and README say so, with `git -C ../xboxrecomp pull`, and cite
   #189 (the allocator change that moved the address). Upstream
   references are written `sp00nznet/xboxrecomp#NN` so they do not
-  autolink to burnout3's own issues (Opus review, 2026-10-16).
+  autolink to burnout3's own issues (review, 2026-10-16).
 
 **B `pr/windows-one-window`: "Build as a Windows GUI program: one window,
 a dialog when boot fails"** (1 commit; from f3bd1a9 and 590a93c).
@@ -149,12 +149,12 @@ a dialog when boot fails"** (1 commit; from f3bd1a9 and 590a93c).
   - `host_report_fatal(step, detail)`: stderr, plus `MessageBoxA` unless
     `--headless` or `RECOMP_HEADLESS` (as the fork), for the XBE load,
     the memory layout failures and an unknown option;
-  - closing the window ends the run (Opus review B1): v0.14.0's GDI
+  - closing the window ends the run (review B1): v0.14.0's GDI
     presenter only stops its thread on `WM_CLOSE`, so a GUI build would
     run on invisibly. A thread watches this process's
     `XboxRecompFramebuffer` window and, once it has gone, calls
     `record_finish()` then `ExitProcess(0)`, as the fork's `run_end`. The
-    toolkit-side gap is stated in the body and passed to xb-upstream;
+    toolkit-side gap is stated in the body and passed to the Burnout 3 session;
   - the load message names the folder;
   - `RECOMP_STDIO_LOG=<path>`, read with plain `getenv`: truncate, then
     reopen stdout and stderr in append mode before anything prints. A GUI
@@ -321,7 +321,7 @@ tagged v0.7.6 and pushed in a CLI round before D opens):
 Anything else the gates find is added to this branch, never worked around
 in b3.
 
-**Shared feature list** (used in D's body and in xb-upstream's xboxrecomp
+**Shared feature list** (used in D's body and in the Burnout 3 session's xboxrecomp
 issue; every item has a command):
 - `./burnout3` (Unix) and `burnout3.cmd`: a bootstrap that runs the CLI at
   the commit `game.toml` locks. Python 3.9+, nothing installed globally.
@@ -373,7 +373,7 @@ lines:
      host, pacing) links #184.
    - The README images of the fork build (`docs/images/` on the fork),
      linked, not offered.
-5. **The CLI:** two lines and a link to xb-upstream's xboxrecomp issue
+5. **The CLI:** two lines and a link to the Burnout 3 session's xboxrecomp issue
    (filled in once it exists).
 6. **Provenance and testing:** AI-assisted (Claude Code), our own code,
    no game data. Every PR is tested on its exact head on the hosts it
@@ -447,8 +447,8 @@ A gate re-runs after any force-push.
   under `wt/b3-prs-*`), built from `origin/main` 79b578d after a
   `git fetch origin`. If upstream moved, rebase onto it first.
 - Author and committer `carlos <4037632+apexJCL@users.noreply.github.com>`.
-  The only trailer is `Co-Authored-By: Claude Opus 5.5
-  <noreply@anthropic.com>`: no session line, no session link.
+  The only trailer is the assistant's `Co-Authored-By` line: no
+  session line, no session link.
 - Subjects in upstream's imperative style (D4). No `BLX-`.
 - Order: the CLI tag (D5) public first. Then push the four branches to
   apexJCL/burnout3-recomp, open I as a draft with the table rows marked
@@ -456,7 +456,7 @@ A gate re-runs after any force-push.
   bodies. Each branch is deleted from the fork when its PR closes.
 - The user asked for the PRs and the index. Still needed before opening:
   - U1-U5 answered;
-  - an Opus review of the four branches and five bodies;
+  - a review of the four branches and five bodies;
   - the user's go for the branch pushes to the fork (outward), given once
     for the batch after the gates pass;
   - PC runs only through the PC lock rules above.
@@ -474,7 +474,7 @@ Answered by the user on 2026-10-16:
 | U2 | D's `[toolkit]` pin: upstream v0.14.0 or the fork? | Upstream. D's body and `docs/running.md` also give a short exact recipe for testing with the fork pin, so the owner can check that it runs as the index says (D5, "Testing with the fork pin"). |
 | U3 | macOS: a commit inside D, or its own PR later? | Inside D. |
 | U4 | Offer the fork README's Progress section and `docs/images/`? | No. The index links the fork's README, images and releases. |
-| U5 | xinput under MinGW: C's b3-side rewrite, or a toolkit PR? | Both: C now; the coordinator passes d4b7028 to xb-upstream. |
+| U5 | xinput under MinGW: C's b3-side rewrite, or a toolkit PR? | Both: C now; the coordinator passes d4b7028 to the Burnout 3 session. |
 
 ## Risks
 
@@ -506,4 +506,4 @@ Answered by the user on 2026-10-16:
   and the pushbuffer executor reopens the window on its next clear. B's
   watcher covers it from the game side; a toolkit fix (`WM_CLOSE` ending
   the run, as the fork's presenters already do) makes the watcher
-  redundant. Passed to the xb-upstream agent.
+  redundant. Passed to the Burnout 3 session.

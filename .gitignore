@@ -1,96 +1,64 @@
-# Your game data: the unpacked disc. Never committed.
-Burnout 3 Takedown/
-*.iso
-*.xiso
+# Written by `xbr new`. Game data, generated code, the toolchain and the
+# bundles never enter git. The top-level entries are anchored (/x), and the
+# ones a worktree holds as symlinks to the main checkout's are bare: a
+# trailing-slash line matches a directory only.
 
-# Generated from default.xbe by regen.sh. Never committed: the tool ships,
-# the output doesn't.
-src/game/recomp/gen/
-src/game/recomp/gen.*/
-
-# Build output (regen.sh's analysis lands in build/xr)
-build/
-build-xr/
-out/
-bin/
-*.obj
-*.exe
-*.dll
-*.lib
-*.exp
-*.pdb
-*.ilk
-*.idb
-
-# Runtime state and captures: emulated HDD, frame dumps, logs
-saves/
-runs/
-*.bmp
-*.log
-setup.log
-
-# Made by Setup.cmd
-Play Burnout 3.cmd
-
-# Local-only
-_local/
-CLAUDE.md
-.claude/
-.mcp.json
-REPO_RULES.md
-
-# Editors, Python, OS
-.vs/
-*.suo
-*.user
-.idea/
-__pycache__/
-*.pyc
-.venv/
-Thumbs.db
-Desktop.ini
-.DS_Store
-*.tmp
-*.bak
-
-# ./burnout3 (xboxrecomp-cli): its toolchain, venvs, build trees, bundles,
-# the generation key and marker, bench logs and local bench settings.
-/.venv-ghidra/
-/external/
-/third_party/
-/build-*/
-/dist/
-/.ruff_cache/
-/bench-logs
-/build-logs/
-src/game/recomp/gen.key.json
-src/game/recomp/.gen-regenerating
-/scripts/bench.env
-/.xbr-pin
-
-# The developer's own options (the game reads config/config.toml from the
-# working directory over the build's config.default.toml); never committed.
-config/config.toml
-
-# From the `xbr new` scaffold (CLI 0.7.5): what `import` leaves beside the
-# game files while it replaces them, the bundles' by-products, and game
-# data, captures and game output anywhere in the tree. The images in
-# docs/screenshots (upstream's) and docs/images (the README's, of this
-# build) are the only pictures tracked.
+# Your dump, and the analysis the pipeline writes beside it; `import`
+# builds the dump beside it first and keeps the old one there until the
+# new one is in place.
+/Burnout 3 Takedown
 /Burnout 3 Takedown.partial/
 /Burnout 3 Takedown.old/
+
+# Generated code and its key (`burnout3 package` regenerates when it differs).
+/src/game/recomp/gen/
+/src/game/recomp/gen.key.json
+/src/game/recomp/.gen-regenerating
+
+# The pipeline's intermediates.
+/build/xr/
+
+# Builds, and the packaging build trees (anchored: a change named
+# openspec/changes/build-*/ is not one).
+/build-win/
+/build/
+/build-*/
+/build-logs/
+
+# `burnout3 setup`: the pinned venvs, the toolchain, the toolkit and CLI clones.
+/.venv*
+/third_party
+/external
+/.xbr-pin
+# `burnout3 package`'s stage records in a folder outside git (in a repo
+# they live in the git directory).
+/.xbr/
+
+# `burnout3 package`: private bundles holding the game. Never commit them.
+/dist/
 *.dmg
+*.exe
+*.pdb
 *.nsi
 *.tar
+
+# The bench host. Bare: a symlink to the workspace's one store.
+bench-logs
+/scripts/bench.env
+
+# Game data, captures and game output, anywhere in the tree.
 *.xbe
+*.iso
+*.xiso
 *.xpr
 *.xwb
 *.adx
 *.sfd
 *.ipk
 *.wav
+*.bmp
 *.png
-!docs/screenshots/*.png
+# Screenshots of your own build for the README are the one exception.
 !docs/images/*.png
 *.ico
 *.icns
@@ -100,3 +68,70 @@ config/config.toml
 *.xsv
 UDATA/
 TDATA/
+saves/
+
+*.pack
+hud-pack.toml
+*.xmv
+*.rws
+*.awd
+CACHE/
+
+# Work that belongs outside the repo: worktrees live in the workspace's
+# wt/ (doctor still reports one here), A/B and probe output in its runs/.
+/wt/
+_local/
+runs/
+
+# Backups: a tracked game.toml.bak-<date> is how one gets in.
+*.bak
+*.bak-*
+
+# Per-user agent settings.
+.claude/settings.local.json
+CLAUDE.local.md
+
+*.log
+__pycache__/
+.ruff_cache/
+.DS_Store
+
+# --- this game ---
+# Generated key files beside gen (gen.<n>/ from a split regenerate).
+src/game/recomp/gen.*/
+
+# Upstream's MSVC build (Setup.cmd, regen.sh) and its outputs.
+build-xr/
+out/
+bin/
+*.obj
+*.dll
+*.lib
+*.exp
+*.ilk
+*.idb
+setup.log
+Play Burnout 3.cmd
+
+# Upstream's screenshots are tracked (the export allows them while they
+# equal upstream's).
+!docs/screenshots/*.png
+
+# The developer's own options (the game reads config/config.toml from the
+# working directory over the build's config.default.toml).
+config/config.toml
+
+# Local-only agent and editor files.
+CLAUDE.md
+.claude/
+.mcp.json
+REPO_RULES.md
+TESTING.md
+.vs/
+*.suo
+*.user
+.idea/
+*.pyc
+*.tmp
+Thumbs.db
+Desktop.ini

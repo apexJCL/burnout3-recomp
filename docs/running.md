@@ -122,11 +122,12 @@ For debugging:
 ## Options (`config.default.toml`, `config.toml`)
 
 The fork toolkit's enhancements layer is built in (`XBOXRECOMP_ENHANCE`,
-on in `CMakeLists.txt`), and every key in it is stock unless something sets it.
+on in `CMakeLists.txt`), and every key in it is stock unless something sets it,
+but for `present.pacing`, which defaults to `sleep`.
 The options live in two files. `config.default.toml` sits beside the
 executable (in `Contents/Resources/` in the macOS app; the build copies
-`packaging/config.default.toml` there) and lists every key at its stock
-value. An install or upgrade replaces it, and the game never writes it.
+`packaging/config.default.toml` there) and lists every key at its
+default. An install or upgrade replaces it, and the game never writes it.
 `config/config.toml` holds only the keys the player changed, and nothing
 overwrites it. A developer build reads it from the working directory, and
 the packaged launchers name the one under the user-data folder through
@@ -141,20 +142,23 @@ a key the game does not know is reported there too. The toolkit's
 `docs/runtime/config.md` has the details. This game has no keys of its own
 in the layer.
 
-| Key | Variable | Values | Stock |
+| Key | Variable | Values | Default |
 |---|---|---|---|
 | (the file) | `RECOMP_CONFIG` | a path to the player's `config.toml`, or `none` to read no file at all, not even the defaults file (`RECOMP_ENHANCE_CONFIG` is the old name) | `config/config.toml` |
 | `render.scale` | `RECOMP_RENDER_SCALE` | internal resolution factor, 1 to 4 | `1` |
-| `display.aspect` | `RECOMP_DISPLAY_ASPECT` | `4:3` (the only one implemented) | `4:3` |
+| `render.aniso` | `RECOMP_RENDER_ANISO` | anisotropic filtering on mipmapped textures: `0` (off) or `2` to `16` (Metal and Direct3D 11) | `0` |
+| `display.aspect` | `RECOMP_DISPLAY_ASPECT` | `4:3` (stock; the only ratio this toolkit pin supports) | `4:3` |
 | `present.filter` | `RECOMP_PRESENT_FILTER` | `nearest`, `linear`, `integer` | `nearest` |
 | `present.fullscreen` | `RECOMP_PRESENT_FULLSCREEN` | borderless desktop fullscreen at start: `true`/`false` in the file, `1`/`0` in the variable | `false` (`0`) |
-| `present.pacing` | `RECOMP_PRESENT_PACING` | `spin` (busy-wait) or `sleep` (the lowered spin waits sleep) | `spin` |
+| `present.pacing` | `RECOMP_PRESENT_PACING` | `sleep` (the lowered spin waits sleep until the kernel signals, which frees a CPU core) or `spin` (the console-original busy-wait, which holds a CPU core) | `sleep` (stock: `spin`) |
+| `present.surface` | `RECOMP_PRESENT_SURFACE` | `auto` (gamescope scales the frame when the SteamOS launcher says it runs there, else the window does), `window`, `internal` | `auto` |
 | `textures.pack` | `RECOMP_TEXTURES_PACK` | a texture pack file, or `none` | `none` |
 | `textures.font` | `RECOMP_TEXTURES_FONT` | the pack's font-atlas entries, `on`/`off` | `on` |
 | `textures.text` | `RECOMP_TEXTURES_TEXT` | the pack's baked-text entries, `on`/`off` | `on` |
 
 The race gate and every bench example here run stock: `RECOMP_CONFIG=none`
-and the keys above at their stock values, so a developer's `config.toml`
+and the keys above at their stock values (`present.pacing=spin`, the
+console-original timing), so a developer's `config.toml`
 never changes a measurement. `python3 scripts/race_gate.py --stock-env`
 prints those pins as `KEY=VALUE` words for `BENCH_ENV` (`--render-scale N`
 for the one A/B), and `--check` fails a run whose `[ENHANCE]` lines show

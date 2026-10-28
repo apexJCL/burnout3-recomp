@@ -347,7 +347,7 @@ address and the original dates; `git diff <old-tip> <new-tip>` is empty.
 The old tip is kept as `archive/main-pre-public` before `main` moves.
 Moving `main` is a reset to a rewritten history, not a fast-forward: the
 orchestrator does it with the user's explicit go, and every branch off
-the old shas rebases (`fix/race-gate-aniso` first, with xb-upstream).
+the old shas rebases (`fix/race-gate-aniso` first, with the Burnout 3 session).
 `notes/b3-public/sha-map.txt` maps old to new, as
 `notes/public-toolkit-map/` does for the toolkit. Since U1 is answered,
 P2 and P3 commit as the noreply identity from the start (squash merges
@@ -423,13 +423,13 @@ to Steam with the Gamepad template, and quit from the pad through Steam.
 
 | Phase | Repo | Branch (worktree) | Identity | Review |
 |---|---|---|---|---|
-| P0 bookkeeping | cat | `b3pub/close-b3-on-xbr` (`wt/b3-public/cat`) | local | Opus |
-| P1 window guard + rows + template | toolkit, then CLI | `fix/fb-window-guard` (`wt/b3-public/xboxrecomp`), `feat/scaffold-title-test` (`wt/b3-public/xboxrecomp-cli`, off `main` at P1's start, 489196b or later) | toolkit local; CLI noreply | Opus |
-| P2 one window | b3 | `feat/one-window` (`wt/b3-public/b3`, off `main` d6eab90, rebased after `fix/race-gate-aniso`) | noreply (U1) | Opus |
-| P3 scaffold + wizard + changelog + audit | b3 (CLI only on a gap) | `feat/scaffold-wizard` | noreply | Opus |
+| P0 bookkeeping | cat | `b3pub/close-b3-on-xbr` (`wt/b3-public/cat`) | local | before merge |
+| P1 window guard + rows + template | toolkit, then CLI | `fix/fb-window-guard` (`wt/b3-public/xboxrecomp`), `feat/scaffold-title-test` (`wt/b3-public/xboxrecomp-cli`, off `main` at P1's start, 489196b or later) | toolkit local; CLI noreply | before merge |
+| P2 one window | b3 | `feat/one-window` (`wt/b3-public/b3`, off `main` d6eab90, rebased after `fix/race-gate-aniso`) | noreply (U1) | before merge |
+| P3 scaffold + wizard + changelog + audit | b3 (CLI only on a gap) | `feat/scaffold-wizard` | noreply | before merge |
 | P4 publish round | b3, cat | no branch: remotes, rewrite, audit, push, tag, release check, upstream PR plan | noreply | the user's go at each outward step |
 
-Implementation waits for xb-upstream's word on live b3 branches: given
+Implementation waits for the Burnout 3 session's word on live b3 branches: given
 (2026-10-15), `fix/race-gate-aniso` edb0835 is the only one, and it does
 not touch P2's or P3's files. The pins move together: P1 lands in the
 toolkit and the CLI first; b3's `[toolkit]` pin moves in P2 (with its two

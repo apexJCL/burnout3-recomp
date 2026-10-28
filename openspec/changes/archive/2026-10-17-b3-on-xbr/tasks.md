@@ -25,8 +25,8 @@ Rules for every task:
 
 ## 0. Spec and decisions
 
-- [x] 0.1 Opus drafts proposal, design, tasks and the game-manifest delta on `spec/b3-on-xbr`. `openspec validate b3-on-xbr --strict` passes.
-- [x] 0.2 Fable reads and improves the spec (CLAUDE.md step 1; 2026-10-06). Implementation resumes from this revision.
+- [x] 0.1 The agent drafts proposal, design, tasks and the game-manifest delta on `spec/b3-on-xbr`. `openspec validate b3-on-xbr --strict` passes.
+- [x] 0.2 The reviewer reads and improves the spec (CLAUDE.md step 1; 2026-10-06). Implementation resumes from this revision.
 - [x] 0.3 The user answers U1 (b3 branch) and U5 (bundle renderer, after 2.7's B4): U1 b3 `main`; U5 `d3d11`, B4 must pass before phase 3 (2026-10-06). U2, U3, U4, U6 and U7 are decided (orchestrator, 2026-10-06; design.md's table). Record U1 and U5 in the table when they come.
 - [x] 0.4 Prerequisite: `feat/steamos-installer` is merged into the CLI's `main` (4c8d361, 2026-10-06). The CLI branches start there.
 
@@ -106,7 +106,7 @@ Gates (record evidence in the commit messages):
   - cat's `gen.key.json` is byte-identical, and `./blinx2` plans `build, package` only.
   - `uv run pytest tests` passes, and ruff is clean in the CLI.
   Merged 2026-10-06 (closed in b3-public-release P0): C1-C2 were merge gates of the CLI squash 04d491f; cat pinned it in c3b9440 (`feat/b3-pins` dc0a5f3).
-- [x] 1.15 A Fable review of both branches. Fixes go back to this change's agent. Then:
+- [x] 1.15 A review of both branches. Fixes go back to this change's agent. Then:
   - the orchestrator squash-merges the CLI (`manifest: analysis_json, target defaults, the stock rule and sync_excludes for a second game`);
   - fast-forwards b3 `main` per U1 and squash-merges `feat/xbr` (`xbr: build Burnout 3 through xboxrecomp-cli`);
   - moves b3's `[cli]` pin to the CLI merge sha;
@@ -136,7 +136,7 @@ Gates (record evidence in the commit messages):
     - a run with a planted `[FAULT]` line in a copied log fails `check_run_end` (unit test, 2.3; no host run needed).
   - **B4 (feeds U5):** one race with `BENCH_ENV=RECOMP_PB_BACKEND=d3d11` and `BENCH_FRAMES=1`, `--headless` so the CPU window stays off (the D3D11 backend opens its own window, which the Proton host allows). Compare frames at matching times with the CPU race (`RECOMP_FB_DUMP`); note whether boot, menu and race render correctly. Record the D3D11 `flips:` count and the CPU run's dumped-frame count over the same limit.
   Merged 2026-10-06 (closed in b3-public-release P0): B4 answered by U5's outcome: after toolkit 4773a01 (one render target per surface) B4 passed (title, menus, race, results; TASKS 2026-10-06), and the bundle ships `RECOMP_PB_BACKEND=d3d11` (`packaging/launch.env.default.windows`); the Deck installs of 2026-10-12 play on it.
-- [x] 2.8 Fable review, fixes, squash merges in the CLI and cat, b3's `[cli]` pin. cli-extraction tasks 2.2 and 2.3 are ticked with a pointer here.
+- [x] 2.8 Review, fixes, squash merges in the CLI and cat, b3's `[cli]` pin. cli-extraction tasks 2.2 and 2.3 are ticked with a pointer here.
   Merged 2026-10-06 (closed in b3-public-release P0): CLI 04d491f (with `feat/b3-p2` f42b8ff), cat c3b9440, b3 `[cli]` pin 04d491f in 5cf69e5. cli-extraction 2.2 and 2.3 point here.
 
 ## 3. Phase 3: packaging (CLI `feat/b3-p3`; cli-extraction 2.1 windows and 2.4)
@@ -157,7 +157,7 @@ Gates (record evidence in the commit messages):
   - Remove both scratch roots afterwards with a reviewed one-line command for the user (CLAUDE.md step 6).
 - [x] 3.7 **B7, Steam Deck (user go-ahead):** the same steamos install on stock SteamOS (the user's Steam Deck). Record the result.
   Merged 2026-10-06 (closed in b3-public-release P0): the Deck install of 2026-10-12 (Burnout3Takedown 20261012.1309-c56574b4-te5d407e, `~/Games/Burnout3Takedown`; cat TASKS.md "Deck builds installed 2026-10-12"); the user plays on it.
-- [x] 3.8 Fable review, fixes, squash merges, pins. cli-extraction tasks 2.1 (windows and README) and 2.4 are ticked with a pointer here. The macos template move is left to D9.
+- [x] 3.8 Review, fixes, squash merges, pins. cli-extraction tasks 2.1 (windows and README) and 2.4 are ticked with a pointer here. The macos template move is left to D9.
   Merged 2026-10-06 (closed in b3-public-release P0): CLI 04d491f (`feat/b3-p3` 216f4de), cat c3b9440, b3 5cf69e5. cli-extraction 2.4 points here, and 2.1 for its windows and README part; b3 packages macos since b3-macos-host (b3 dfe602f), while the macos template move into the CLI stays a D9 item.
 
 ## 4. After the merges

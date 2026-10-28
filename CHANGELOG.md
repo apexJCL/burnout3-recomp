@@ -10,6 +10,42 @@ the tagged commit has none.
 
 ## [Unreleased]
 
+### Changed
+- **Breaking: new names for controls and keys** in `[input.bindings]` and
+  `[input.actions]` of `config/config.toml`. The toolkit now uses upstream
+  xboxrecomp's names and no longer reads the old ones, so rewrite any line
+  of yours that uses them: `ltrigger` `rtrigger` `lthumb` `rthumb` become
+  `left_trigger` `right_trigger` `left_thumb` `right_thumb`; `lstick_*`
+  and `rstick_*` become `left_stick_*` and `right_stick_*`; `KP0`..`KP9`
+  become `Numpad0`..`Numpad9`; `KPEnter` `KPPlus` `KPMinus` `KPMultiply`
+  `KPDivide` `KPPeriod` become `NumpadEnter` `NumpadAdd` `NumpadSubtract`
+  `NumpadMultiply` `NumpadDivide` `NumpadDecimal`; `LBracket` `RBracket`
+  become `LeftBracket` `RightBracket`; `MouseLeft` `MouseRight`
+  `MouseMiddle` become `Mouse1` `Mouse2` `Mouse3`. An old name logs an
+  `unknown control`, `unknown input` or `unknown name` line: an old control
+  name is ignored and that control keeps its default; an old key name is
+  skipped but the rest of the line still applies, so a line left with no
+  valid entries unbinds that control (`start = "KPEnter"` leaves Start with
+  no key); an action line keeps only its valid entries.
+  The game's defaults bind nothing by name, so a file without such lines
+  needs no change.
+- The build pins the toolkit fork at `blinx2-v0.7.0` (was `blinx2-v0.4.0`),
+  which merges upstream xboxrecomp v0.14.0 through v0.16.0 and moves the
+  macOS and Linux hosts from SDL2 to SDL3. The lifted code honours the
+  SSE rounding mode (MXCSR) the game sets. The disassembler refuses a
+  function start that falls inside an instruction of the body before it,
+  and keeps tail blocks inside the function that jumps to them instead of
+  splitting them off, so the game now lifts as 23,652 functions, not
+  24,000. File handles are checked before use (a bad handle is an error,
+  not a crash), and the title cache (`E:\CACHE`) gets its own `TitleCache`
+  folder in the save folder instead of sharing `Cache` with the cache
+  partitions.
+- `present.pacing` defaults to `sleep` in `config.default.toml`, as in the
+  toolkit (was `spin`): the game's lowered spin waits sleep until the kernel
+  signals, so the game no longer holds a CPU core. `spin`, the
+  console-original timing, is still an option, and the
+  race gate still pins it. The file also lists `present.surface`.
+
 ## [2026.10.0-rc.2] - 2026-10-17
 
 A fix for the Steam Deck: the game starts again under Proton.

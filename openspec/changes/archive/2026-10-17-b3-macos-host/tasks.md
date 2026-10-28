@@ -36,4 +36,4 @@ listed for the orchestrator.
 ## 4. Gates and hand-back
 - [x] 4.1 Mac build gate (2.4). No Python changed in b3 unless `burnout3.py` was touched (it is not); no toolkit change, so no ctest.
 - [x] 4.2 Notes to `notes/b3mac/NOTES.md`; dumps under `runs/b3mac/`; `b3/TESTING.md` is an untracked file in the main checkout, which agents never edit: its run note is in `notes/b3mac/NOTES.md` for the orchestrator to copy.
-- [ ] 4.3 Owed to the orchestrator: a Proton run of `b3/macos-host` (the `--seconds` timer, `fault_printf`, `env_set` are shared; `TITLE_KEVENTS` question), the Fable merge review, and the Windows `TITLE_KEVENTS` decision.
+- [ ] 4.3 Owed to the orchestrator: a Proton run of `b3/macos-host` (the `--seconds` timer, `fault_printf`, `env_set` are shared; `TITLE_KEVENTS` question), the merge review, and the Windows `TITLE_KEVENTS` decision.

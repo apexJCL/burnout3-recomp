@@ -1,9 +1,11 @@
-# Burnout 3: Takedown options: every key at its stock value. The game reads
-# this file on each launch, beside its executable; it is never copied, and
-# an update replaces it, so new keys and defaults reach you. Do not edit
-# it: put the keys you change in config/config.toml (copy a line from
-# here), which the game creates with a short comment the first time and
-# never overwrites. Environment variables (RECOMP_*, config/launch.env in a
+# Burnout 3: Takedown options: every key at its default. Each default is the
+# stock behaviour except present.pacing, which sleeps instead of the
+# console's spin and so frees a CPU core. The game reads this
+# file on each launch, beside its executable; it is never copied, and an
+# update replaces it, so new keys and defaults reach you. Do not edit it:
+# put the keys you change in config/config.toml (copy a line from here),
+# which the game creates with a short comment the first time and never
+# overwrites. Environment variables (RECOMP_*, config/launch.env in a
 # bundle) override both. Reference: the toolkit's docs/runtime/config.md.
 
 [render]
@@ -15,15 +17,19 @@ aniso = 0                 # anisotropic filtering on mipmapped textures: 0 (stoc
                           # (Metal and Direct3D 11)
 
 [display]
-aspect = "4:3"            # only 4:3 so far
+aspect = "4:3"            # "4:3" (stock; the only ratio this toolkit pin supports)
 
 [present]
 filter = "nearest"        # "nearest" (stock), "linear", "integer"
 fullscreen = false        # true: borderless fullscreen at start
-pacing = "spin"           # "spin" (stock: the game's lowered spin waits hold a
-                          # CPU core, as on the Xbox) or "sleep" (they sleep
-                          # until the kernel signals instead; the frames are
-                          # the same)
+pacing = "sleep"          # "sleep": the game's lowered spin waits sleep until the
+                          # kernel signals, which saves CPU and battery.
+                          # "spin" is the console-original timing: the waits
+                          # hold a CPU core, as on the Xbox
+surface = "auto"          # "auto": the frame-sized surface goes to gamescope for
+                          # it to scale when the SteamOS launcher says it runs
+                          # there (Steam's FSR needs scale = 1 on a Deck);
+                          # "window" (the old behaviour) or "internal"
 
 # [textures]
 # pack = "none"           # a texture pack file; none for this title yet

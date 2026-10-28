@@ -9,10 +9,19 @@
  * is set in the environment.
  *   VBLANK      D3D's present waits on the vblank event the GPU ISR (vector 3)
  *               signals; without vblank delivery the boot stops after flip 1.
+ *               paced: the 60 Hz schedule with the KickOff ack watch; since
+ *               the toolkit's v0.16 sync "1" is upstream's plain tick.
  *   GUEST_CPUS  one: every guest thread on one host core, as on the console
- *               (the toolkit's own default too; stated here so this game's
- *               pinning does not depend on it). RECOMP_GUEST_CPUS=all is
- *               the A/B.
+ *               (the toolkit's default since v0.16 is every core, as
+ *               upstream's). RECOMP_GUEST_CPUS=all is the A/B.
+ *   DISPATCH_GATE  1: the one-CPU DISPATCH gate, so device interrupts and
+ *               queued DPCs run at the guest holder's safe points and never
+ *               beside its guest code, as on the console's one CPU.
+ *   FLIP_PACING 1: the pushbuffer walker and the KickOff ack hold after a
+ *               flip until the guest vblank reaches the swap's interval, as
+ *               the NV2A's FLIP_STALL does.
+ *               The gate and flip pacing were the fork toolkit's fixed
+ *               behaviour before v0.16; upstream made both opt-in.
  *   USB_PADS    two pads: the split-screen modes need a second controller.
  * The DSOUND GP doorbell ack (apu_dsp_ack=auto: SGE[0] of NV_PAPU_GPSADDR
  * + 0x810, wherever the contiguous allocator put it; the upstream allocator
@@ -46,9 +55,22 @@
 #define RECOMP_ENV_GAME_KEYS(X)
 #endif
 
+/* GUEST_CPUS, DISPATCH_GATE and FLIP_PACING are toolkit rows since its
+ * v0.16 sync (which also defines RECOMP_ENV_HAVE_RUMBLE_ROW); a toolkit
+ * before it has none of them and already runs this way, so they are left
+ * out there. Drop the guard once the pin is past that merge. */
+#ifdef RECOMP_ENV_HAVE_RUMBLE_ROW
+#define B3_ENV_ONE_CPU_DEFAULTS(D) \
+    D(GUEST_CPUS,    "one") \
+    D(DISPATCH_GATE, "1") \
+    D(FLIP_PACING,   "1")
+#else
+#define B3_ENV_ONE_CPU_DEFAULTS(D)
+#endif
+
 #define RECOMP_ENV_GAME_DEFAULTS(D) \
-    D(VBLANK,     "1") \
-    D(GUEST_CPUS, "one") \
-    D(USB_PADS,   "2")
+    D(VBLANK,        "paced") \
+    B3_ENV_ONE_CPU_DEFAULTS(D) \
+    D(USB_PADS,      "2")
 
 #endif /* RECOMP_ENV_GAME_H */

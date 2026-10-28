@@ -28,7 +28,7 @@ Rules for every task:
   `spec/b3-upstream-prs`; `openspec validate b3-upstream-prs --strict`
   passes.
 - [x] 0.2 The user answers U1-U5 (design's table, 2026-10-16): GUI default; upstream pin plus a fork-pin test recipe; macOS inside D; no Progress or images; xinput both ways.
-- [ ] 0.3 Opus review of the spec. Its fixes go back to this branch.
+- [ ] 0.3 Review of the spec. Its fixes go back to this branch.
 
 ## 1. CLI: `fix/upstream-toolkit-pin` (xboxrecomp-cli)
 
@@ -45,7 +45,7 @@ Rules for every task:
   `wizard/check.sh` if wizard Go code changed. BLiNX 2 `blinx2 golden`
   on Metal is unchanged on the fork pin (cat's CLI pin moved in a
   worktree). Done 1.1-1.5: CLI `main` 2a4de72 ("release: 0.7.6").
-- [ ] 1.6 (the gate before D opens) Opus review, squash merge to CLI `main` with the noreply author
+- [ ] 1.6 (the gate before D opens) review, squash merge to CLI `main` with the noreply author
   and committer, tag v0.7.6 with its CHANGELOG section, then a CLI push
   round (audit, fast-forward), all with the user's go. The GitHub
   Release goes with the tag.
@@ -54,7 +54,7 @@ Rules for every task:
 
 - [x] 2.1 One commit, "Boot on xboxrecomp v0.14.0: six seeds, auto DSP
   ack", as design D4. Done: b3 `pr/boot-v0.14` d3d7b52, amended after the
-  Opus review (S1, S2, N9, N10) to f8350cb, then to 67771a2 with the sixth
+  review (S1, S2, N9, N10) to f8350cb, then to 67771a2 with the sixth
   seed (0x000782C0: the Deck gate on f8350cb stopped at the main menu once
   the profile loaded, 10,251 failed calls); body draft `bodies/A.md`.
 - [ ] 2.2 gen: on v0.14.0, `regen.sh` finds the six, with 0 failed. On the
@@ -209,12 +209,12 @@ record and are not re-run; on v0.14.0 only the build checks count.
 
 ## 6. Index, opening, afterwards
 
-- [x] 6.1 Opus review of the four branches and five bodies. Fixes go to
+- [x] 6.1 Review of the four branches and five bodies. Fixes go to
   the branches' agent. Gates re-run on any changed head.
 - [x] 6.2 With the user's go: push the four branches to
   apexJCL/burnout3-recomp. Open I as a draft (D6, run dates refreshed),
   then A, C, B, D. Put the PR numbers in I and the bodies. Tell
-  xb-upstream I's number and the feature list for its xboxrecomp issue,
+  the Burnout 3 session the number of I and the feature list for its xboxrecomp issue,
   and add that issue's link to I and D when it exists.
   Done 2026-10-16: sp00nznet/burnout3 #4 (I, draft), #5 (A), #6 (C),
   #7 (B), #8 (D). The bodies here match the published ones (the Title and

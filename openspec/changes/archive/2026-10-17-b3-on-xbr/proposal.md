@@ -1,6 +1,6 @@
 # b3-on-xbr: Burnout 3 builds, tests and packages through xboxrecomp-cli
 
-Status: drafted by Opus, read and revised by Fable (2026-10-06, CLAUDE.md
+Status: drafted by the agent, read and revised by the reviewer (2026-10-06, CLAUDE.md
 workflow step 1). Implementation starts from this revision. Facts were
 checked against the code at these commits:
 - xboxrecomp-cli `main` 4c8d361 (`feat/steamos-installer` 268b2c6 squashed

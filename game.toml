@@ -20,11 +20,12 @@ sha256 = ["9f497acd82adb8edfb72cc31aeeb35010b45d32b13a3f1fc6540717ff24d13f9"]
 # The CLI at a release tag. The commit locks the tag: a tag that names
 # another commit (moved, re-pushed) is refused. 0.7.5 and newer build the
 # player wizard ([wizard]) and publish a release with its CHANGELOG notes;
-# 0.7.7 is the floor, since its SteamOS launcher pins the Proton the game
-# runs on (GE-Proton11-7) instead of following the newest GE-Proton.
+# 0.7.7 pins the Proton the game runs on (GE-Proton11-7) in the SteamOS
+# launcher; the commit below is the floor, since it reads [public] and
+# [layout].
 [cli]
-tag = "v0.7.7"
-commit = "f34648a8363b94752c05afd4b6a5012afdf9dd26"
+tag = "v0.13.0"
+commit = "33390f64995b00ac7003a764b154b7855de3f4bd"
 url = "https://github.com/apexJCL/xboxrecomp-cli.git"
 
 [toolkit]
@@ -32,9 +33,9 @@ url = "https://github.com/apexJCL/xboxrecomp-cli.git"
 # one-window guard and folder rows, render.aniso, Partition1\CACHE out
 # of the game folder).
 url = "https://github.com/apexJCL/xboxrecomp.git"
-tag = "blinx2-v0.4.0"
+tag = "blinx2-v0.7.0"
 branch = "blinx2/portability"
-commit = "4e5f6039c3c3cf39de1c284cad9df3ae85e853a0"
+commit = "178657afe161329724f7a9bf03b4be82e42c70f6"
 
 [toolchain]
 llvm_mingw = "20260922"
@@ -104,7 +105,7 @@ targets = ["windows", "steamos", "macos"]
 # macos: Burnout3Takedown.app in a DMG, with the Homebrew dylibs the Mac build
 # links (otool -L build/burnout3) bundled; the launcher and Info.plist are
 # the game's own, in packaging/macos/.
-brew = ["sdl2", "openssl", "libepoxy"]
+brew = ["sdl3", "openssl", "libepoxy"]
 content = "packaging"
 templates = "packaging"
 icon = "xbe"
@@ -173,3 +174,25 @@ hint = "Off by default: on the Steam Deck's Desktop Mode, add the game to Steam 
 kind = "bool"
 default = false
 config = "present.fullscreen"
+
+# Where this repo differs from the standard layout (the CLI's
+# docs/layout.md): upstream's files stay where upstream has them, so its
+# own build and every upstream diff are unchanged.
+[layout]
+main = "src/game/main.c"
+extra = ["regen.sh", "Setup.cmd", "tools", "CONTRIBUTING.md", "CONTRIBUTORS.md", "ROADMAP.md"]
+
+# The public repo, in export mode: each round is one fresh commit on its
+# main (`burnout3 public init` once per clone, then `burnout3 public
+# export` and the push it prints). origin is upstream: its commits are
+# public already, and the newest one a round contains becomes the round's
+# second parent. The private notes, the patterns and the rewrite rules
+# stay out of it.
+[public]
+url = "git@github.com:apexJCL/burnout3-recomp.git"
+remote = "public"
+mode = "export"
+author = "carlos <4037632+apexJCL@users.noreply.github.com>"
+exclude = [".claude/**", "CLAUDE.md", "CLAUDE.local.md", ".mcp.json", "REPO_RULES.md", "TESTING.md"]
+upstream = "origin/main"
+upstream_files = ["docs/screenshots/*"]

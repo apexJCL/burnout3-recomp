@@ -1,7 +1,7 @@
 # b3-upstream-prs: our Burnout 3 changes offered to sp00nznet/burnout3
 
 Status: written 2026-10-16 from b3-public-release design D7 and tasks 5.7,
-with the xb-upstream session's toolkit facts of the same day. Facts checked
+with the Burnout 3 session's toolkit facts of the same day. Facts checked
 against:
 - b3 `main` 4c85e50 = `public/main` (apexJCL/burnout3-recomp, a GitHub
   fork of sp00nznet/burnout3), 24 commits on `origin/main` 79b578d (the
@@ -26,7 +26,7 @@ The user (2026-10-16) wants the Burnout 3 work offered upstream:
   owner can take or leave with a single merge, with upstream's own setup
   (`Setup.cmd`, `regen.sh`, MSVC, the toolkit at `../xboxrecomp`) still
   working unchanged. Proposing the CLI to xboxrecomp itself is the
-  xb-upstream session's part (an issue linked from #184); this change only
+  the Burnout 3 session's part (an issue linked from #184); this change only
   supplies the shared feature list.
 
 What stands in the way today:
@@ -74,7 +74,7 @@ written in upstream's style: imperative commit subjects, a Keep a Changelog
 Not offered: the publish tooling (`scripts/audit-public.sh` and its test),
 our CalVer CHANGELOG, the fork README's Progress section and
 `docs/images/`. The index links the images on the fork instead. Also not
-offered: the TitleCache fix (a toolkit PR from xb-upstream) and the Windows
+offered: the TitleCache fix (a toolkit PR from the Burnout 3 session) and the Windows
 audio gaps (toolkit side).
 
 The CLI gaps the upstream pin exposes (design D5) go to xboxrecomp-cli as
@@ -82,7 +82,7 @@ one small branch, tagged and pushed before D opens.
 
 ## Out of scope
 
-- Opening the xboxrecomp CLI issue and any toolkit PR (xb-upstream's
+- Opening the xboxrecomp CLI issue and any toolkit PR (the Burnout 3 session's
   stack). The fb-window guard is not needed upstream (design D3).
 - The Metal and D3D11 backends upstream (#184's GPU series).
 - Re-shaping our fork's `main` to match the PRs. It stays as it is; it
