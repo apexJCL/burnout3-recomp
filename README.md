@@ -1,5 +1,12 @@
 # Burnout 3: Takedown — static recompilation
 
+> [!TIP]
+> **The easy way:** from the first release on, download `burnout3-wizard-*`
+> for your system from the [latest release](https://github.com/apexJCL/burnout3-recomp/releases/latest),
+> point it at your own disc image, and it builds and installs the game for you
+> ([more](#play-it-the-build-wizard)). The by-hand route is under
+> [Building with ./burnout3](#building-with-burnout3-xboxrecomp-cli).
+
 A static recompilation of the Xbox version of Burnout 3: Takedown (Criterion, 2004)
 into a native program for Windows, the Steam Deck and other Linux PCs (through
 Proton) and macOS. The game's own x86 code is lifted to C by the
