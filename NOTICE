@@ -1,0 +1,65 @@
+Burnout 3: Takedown static recompilation: notices
+=================================================
+
+This repository's own code is MIT licensed (see LICENSE).
+
+
+The xboxrecomp toolkit
+----------------------
+
+The build compiles in the xboxrecomp toolkit (https://github.com/apexJCL/xboxrecomp,
+a fork of https://github.com/sp00nznet/xboxrecomp). The toolkit is not part of
+this repository. It is MIT licensed, except for the files listed in its own
+NOTICE.
+
+Those exceptions include LGPL-2.1-or-later code extracted from xemu
+(https://github.com/xemu-project/xemu): the MCPX APU sources under src/apu/
+(apu_core.c, apu_dsp.c, apu_vp.c and their headers) and src/nv2a/nv2a_regs.h,
+copyright espes, Jannik Vogel and Matt Borgerson. The toolkit's
+LICENSES/LGPL-2.1.txt has the full licence text.
+
+The toolkit's libraries are linked statically into burnout3. This matters
+if you distribute a built binary. The LGPL then requires you to do the
+following:
+
+  - keep the copyright notices and the LGPL text with the binary;
+  - make the source of the LGPL parts available, including your changes to them;
+  - let recipients relink the program against a modified version of those parts,
+    for example by providing the object files of the rest of the program, or all
+    of its source.
+
+Distributing this repository and the toolkit as source meets these terms. A
+binary distribution must meet them separately.
+
+This game builds with -DXBOXRECOMP_ENHANCE=ON, so the binary also contains
+the toolkit's vendored enhancements overlay: microui (MIT), stb_truetype
+(MIT) and the Atkinson Hyperlegible font (SIL Open Font License 1.1),
+embedded as it is. Their texts are in the toolkit's LICENSES/
+(MIT-microui.txt, MIT-stb.txt, OFL-1.1-atkinson-hyperlegible.txt).
+
+
+dsp56300
+--------
+
+This game builds the toolkit with -DXBOXRECOMP_APU_DSP=ON (game.toml,
+[build] stock_cmake), so every build links the prebuilt dsp56300 library
+(https://github.com/xemu-project/dsp56300, v1.0.0, MIT, copyright 2026 Matt
+Borgerson) and the Rust standard library and crates it bundles (Apache-2.0
+with the LLVM exception, MIT, Unicode-3.0, Zlib; none GPL or LGPL). The
+toolkit's NOTICE lists every crate, and its LICENSES/ has the texts:
+LICENSES/MIT-dsp56300.txt for dsp56300 itself and
+LICENSES/THIRDPARTY-dsp56300-emu.txt for the bundled crates. A binary
+distribution must carry both.
+
+Configure downloads the library, pinned by sha256 in the toolkit's
+cmake/dsp56300.cmake. An offline build points XBOXRECOMP_DSP56300_ARCHIVE
+at a local copy of that archive; a failed download stops the configure step.
+The device runs by default; RECOMP_APU_DSP=0 goes back to the stub.
+
+
+Game data
+---------
+
+Burnout 3: Takedown is not part of this repository. No game files,
+assets, saves or recompiled game code are included. You need your own copy
+of the game to build and run it.

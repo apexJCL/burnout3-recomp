@@ -551,11 +551,9 @@ def drive(args, run):
     if os.environ.get("RECOMP_TRACE"):
         env["RECOMP_TRACE"] += "," + os.environ["RECOMP_TRACE"]
     env.update(stock_env(args.render_scale))
-    # The DSOUND doorbell ack: without it the boot stops after flip 2, right
-    # after B3XboxFx.bin. A game default on main, a toolkit default only from
-    # f465cd3 on, and the macOS host branch dropped its own: say it here so
-    # the gate boots on either toolkit.
-    env.setdefault("RECOMP_APU_DSP_ACK", "auto")
+    # No RECOMP_APU_DSP_ACK: the APU DSP runs by default and the GP answers
+    # DSOUND's doorbell itself (a set ack would only cost an [ENV] line), and
+    # with RECOMP_APU_DSP=0 the toolkit's own default is auto.
     os.makedirs(os.path.join(run, "frames"), exist_ok=True)
     cmd = [exe, "--headless", "--seconds", str(int(args.timeout))]
     with open(os.path.join(run, "env.txt"), "w") as f:

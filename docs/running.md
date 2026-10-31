@@ -88,7 +88,7 @@ Defaults that `main.c` sets, which you can override:
 | `RECOMP_FB_WINDOW` | `1` unless `--headless` | The CPU rasteriser's window. On the fork toolkit (the environment table) only when `RECOMP_PB_BACKEND` is not `d3d11`, which opens its own window; the toolkit ignores the key beside `d3d11` too. |
 | `RECOMP_USB` / `RECOMP_USB_PADS` | `1` / `2` | The USB host and pad count (1–4). Split-screen modes are greyed out with one pad. |
 | `RECOMP_AC97_READY` | `1` | DirectSound refuses to start until the AC'97 codec reports ready, and RenderWare won't start without audio. |
-| `RECOMP_APU_DSP_ACK` | `0x825F8810` | The DSP doorbell DirectSound waits on; [boot.md](boot.md) #5. On the fork toolkit the default is `auto` (`src/env/recomp_env_game.h`). |
+| `RECOMP_APU_DSP_ACK` | `0x825F8810` | The DSP doorbell DirectSound waits on; [boot.md](boot.md) #5. On the fork toolkit the APU DSP runs by default and the GP answers the doorbell itself, so the key is forced off (with one `[ENV]` line if set); with `RECOMP_APU_DSP=0` its default is `auto`. |
 
 On the fork toolkit (`xboxrecomp` with the `recomp_env` table, which
 `./burnout3` builds against), the game also reads these toolkit keys, through

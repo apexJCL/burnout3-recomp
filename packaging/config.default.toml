@@ -1,6 +1,8 @@
 # Burnout 3: Takedown options: every key at its default. Each default is the
-# stock behaviour except present.pacing, which sleeps instead of the
-# console's spin and so frees a CPU core. The game reads this
+# stock behaviour except two: present.pacing sleeps instead of the console's
+# spin and so frees a CPU core, and the cache partition lives in memory
+# (storage.ram_cache: the game sees the same files, the host disk is
+# spared). The game reads this
 # file on each launch, beside its executable; it is never copied, and an
 # update replaces it, so new keys and defaults reach you. Do not edit it:
 # put the keys you change in config/config.toml (copy a line from here),
@@ -30,6 +32,15 @@ surface = "auto"          # "auto": the frame-sized surface goes to gamescope fo
                           # it to scale when the SteamOS launcher says it runs
                           # there (Steam's FSR needs scale = 1 on a Deck);
                           # "window" (the old behaviour) or "internal"
+
+[storage]
+ram_cache = true          # the cache partition (Z:) in memory, capped at the
+                          # stock 750 MB: what the game writes there as it plays
+                          # (a scratch cache the console's dashboard clears
+                          # anyway) never reaches the disk (SSD wear, Deck
+                          # storage). It starts from hdd/Cache and writes
+                          # nothing back. Costs up to 750 MB of RAM. false: the
+                          # files go to hdd/Cache as stock
 
 # [textures]
 # pack = "none"           # a texture pack file; none for this title yet

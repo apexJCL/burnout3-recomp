@@ -24,8 +24,8 @@ sha256 = ["9f497acd82adb8edfb72cc31aeeb35010b45d32b13a3f1fc6540717ff24d13f9"]
 # launcher; the commit below is the floor, since it reads [public] and
 # [layout].
 [cli]
-tag = "v0.15.0"
-commit = "277c3366aa4fe59ec9271949db83728956be70dd"
+tag = "v0.17.0"
+commit = "af5649d15fedb09eac8fd76f05f55edd39816e42"
 url = "https://github.com/apexJCL/xboxrecomp-cli.git"
 
 [toolkit]
@@ -33,9 +33,9 @@ url = "https://github.com/apexJCL/xboxrecomp-cli.git"
 # one-window guard and folder rows, render.aniso, Partition1\CACHE out
 # of the game folder).
 url = "https://github.com/apexJCL/xboxrecomp.git"
-tag = "blinx2-v0.8.0"
+tag = "blinx2-v0.10.0"
 branch = "blinx2/portability"
-commit = "e5a7087201cea886b3b5d72e50f5515581920526"
+commit = "a0c51a5c2db4ce0d2dcc4091552fc2d0a0e56f99"
 
 [toolchain]
 llvm_mingw = "20260922"
@@ -76,7 +76,8 @@ macos_dir = "build"
 # Passed on every packaging configure so a cache cannot keep a non-stock
 # value: the enhancements layer on, every key stock unless a player's
 # config.toml or the environment says otherwise.
-stock_cmake = ["-DXBOXRECOMP_ENHANCE=ON"]
+# The APU DSP is compiled in and runs by default (RECOMP_APU_DSP=0: the stub).
+stock_cmake = ["-DXBOXRECOMP_ENHANCE=ON", "-DXBOXRECOMP_APU_DSP=ON"]
 nonstock_vars = []
 icon_var = ""
 
