@@ -24,8 +24,8 @@ sha256 = ["9f497acd82adb8edfb72cc31aeeb35010b45d32b13a3f1fc6540717ff24d13f9"]
 # launcher; the commit below is the floor, since it reads [public] and
 # [layout].
 [cli]
-tag = "v0.17.0"
-commit = "af5649d15fedb09eac8fd76f05f55edd39816e42"
+tag = "v0.19.0"
+commit = "70c985656f22b34f34b3bd553d47688281cf328c"
 url = "https://github.com/apexJCL/xboxrecomp-cli.git"
 
 [toolkit]
@@ -33,9 +33,9 @@ url = "https://github.com/apexJCL/xboxrecomp-cli.git"
 # one-window guard and folder rows, render.aniso, Partition1\CACHE out
 # of the game folder).
 url = "https://github.com/apexJCL/xboxrecomp.git"
-tag = "blinx2-v0.10.0"
+tag = "blinx2-v0.12.0"
 branch = "blinx2/portability"
-commit = "a0c51a5c2db4ce0d2dcc4091552fc2d0a0e56f99"
+commit = "1551c42daeaa0a124ed9cc38ccae94aa64e224e0"
 
 [toolchain]
 llvm_mingw = "20260922"

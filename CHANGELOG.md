@@ -10,6 +10,12 @@ the tagged commit has none.
 
 ## [Unreleased]
 
+## [2026.11.0] - 2026-11-01
+
+The fork's first full release: the console's own sound mix, less disk wear,
+and a game that no longer holds a CPU core. Heads-up: custom key and pad
+bindings need their new names (see below).
+
 ### Changed
 - **The cache partition lives in memory** (`storage.ram_cache = true`, the
   toolkit's new default for every game): what the game writes to its
@@ -39,8 +45,9 @@ the tagged commit has none.
   no key); an action line keeps only its valid entries.
   The game's defaults bind nothing by name, so a file without such lines
   needs no change.
-- The build pins the toolkit fork at `blinx2-v0.7.0` (was `blinx2-v0.4.0`),
-  which merges upstream xboxrecomp v0.14.0 through v0.16.0 and moves the
+- The build pins xboxrecomp-cli v0.19.0 (was v0.7.7) and the toolkit fork
+  at `blinx2-v0.12.0` (was `blinx2-v0.4.0`), which merges upstream
+  xboxrecomp v0.14.0 through v0.16.0 and moves the
   macOS and Linux hosts from SDL2 to SDL3. The lifted code honours the
   SSE rounding mode (MXCSR) the game sets. The disassembler refuses a
   function start that falls inside an instruction of the body before it,
@@ -55,6 +62,13 @@ the tagged commit has none.
   signals, so the game no longer holds a CPU core. `spin`, the
   console-original timing, is still an option, and the
   race gate still pins it. The file also lists `present.surface`.
+
+### Fixed
+- The lifter keeps narrow `mul`, `imul`, `div` and `idiv` on their 8- and
+  16-bit registers instead of widening them, so a build from your dump
+  computes those the way the console does.
+- When a write needs room past the RAM cache's 750 MB cap, the cache drops
+  data the game never opened, oldest first, instead of filling up.
 
 ## [2026.10.0-rc.2] - 2026-10-17
 
