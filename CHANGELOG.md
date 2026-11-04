@@ -10,6 +10,26 @@ the tagged commit has none.
 
 ## [Unreleased]
 
+## [2026.11.2] - 2026-11-04
+
+**The menu is readable on the Deck.**
+
+- **A menu sized for your screen.** On the Steam Deck the menu is now
+  large enough to read, and on a high-DPI desktop it follows your scale.
+  Render scale and shaders no longer change its size, the Size setting
+  applies at once, and taps reach every button at render scale 2 and 3.
+
+### For developers
+
+- **Pins:** xboxrecomp-cli v0.21.0 and toolkit blinx2-v0.14.0, up from
+  v0.20.0 and blinx2-v0.13.0.
+- **New in the CLI:** `saves list` and `saves import`, `[system]
+  languages` for the toolkit's `system.language`, and the release gate
+  (`[xbe] region`, `version`, `title`).
+- **New in the toolkit:** mod API 8 (a 3D debug draw at the flip),
+  `RECOMP_DEBUG=tex_dump=<dir>` for texture packs, and groundwork for an
+  in-window game reset, off by default.
+
 ## [2026.11.1] - 2026-11-03
 
 **The Windows build wizard works again, and your saves can travel.**
