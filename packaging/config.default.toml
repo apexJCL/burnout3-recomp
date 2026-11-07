@@ -1,14 +1,16 @@
-# Burnout 3: Takedown options: every key at its default. Each default is the
-# stock behaviour except two: present.pacing sleeps instead of the console's
-# spin and so frees a CPU core, and the cache partition lives in memory
-# (storage.ram_cache: the game sees the same files, the host disk is
-# spared). The game reads this
-# file on each launch, beside its executable; it is never copied, and an
-# update replaces it, so new keys and defaults reach you. Do not edit it:
-# put the keys you change in config/config.toml (copy a line from here),
-# which the game creates with a short comment the first time and never
-# overwrites. Environment variables (RECOMP_*, config/launch.env in a
-# bundle) override both. Reference: the toolkit's docs/runtime/config.md.
+# Burnout 3: Takedown options: every key at its default, except
+# present.pacing, whose default is set per build and so is not written here
+# (see the present table below). Each default is the stock behaviour except
+# two: present.pacing sleeps on every non-Windows build (macOS: it frees a
+# CPU core; the Windows build keeps the console's spin), and the cache
+# partition lives in memory (storage.ram_cache: the game sees the same
+# files, the host disk is spared). The game reads this file on each
+# launch, beside its executable; it is never copied, and an update replaces
+# it, so new keys and defaults reach you. Do not edit it: put the keys you
+# change in config/config.toml (copy a line from here), which the game
+# creates with a short comment the first time and never overwrites.
+# Environment variables (RECOMP_*, config/launch.env in a bundle) override
+# both. Reference: the toolkit's docs/runtime/config.md.
 
 [render]
 scale = 1                 # internal resolution factor: 1 (stock 640x480), 2, 3, 4
@@ -24,14 +26,29 @@ aspect = "4:3"            # "4:3" (stock; the only ratio this toolkit pin suppor
 [present]
 filter = "nearest"        # "nearest" (stock), "linear", "integer"
 fullscreen = false        # true: borderless fullscreen at start
-pacing = "sleep"          # "sleep": the game's lowered spin waits sleep until the
-                          # kernel signals, which saves CPU and battery.
-                          # "spin" is the console-original timing: the waits
-                          # hold a CPU core, as on the Xbox
+# pacing                  # not set here: the default is per build.
+                          # Every non-Windows build (macOS): "sleep", the
+                          # game's lowered spin waits sleep until the kernel
+                          # signals, which saves CPU and battery. The Windows
+                          # build (on a Deck under Proton too): "spin", the
+                          # console-original timing, where the waits hold a
+                          # CPU core as on the Xbox; native Windows stalled
+                          # file reads at sleep. Either value works
+                          # on every build: put pacing = "spin" or
+                          # pacing = "sleep" under [present] in
+                          # config/config.toml
 surface = "auto"          # "auto": the frame-sized surface goes to gamescope for
                           # it to scale when the SteamOS launcher says it runs
                           # there (Steam's FSR needs scale = 1 on a Deck);
                           # "window" (the old behaviour) or "internal"
+# shader = "none"         # a slang preset in place of the final present (Metal
+                          # and Direct3D 11): "crt-lottes", "crt-lottes-fast",
+                          # "crt-hyllian", "fsr" (an upscaler) or a .slangp
+                          # path; "none" is stock. Also on the menu's Shaders
+                          # page
+# profile = "none"        # a shader profile, config/shader-profiles/<name>.toml,
+                          # saved from the menu's Shaders page; "none" is stock.
+                          # When set in the same file it wins over shader
 
 [storage]
 ram_cache = true          # the cache partition (Z:) in memory, capped at the

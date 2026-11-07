@@ -872,11 +872,11 @@ static void record_start(const char *out)
 
 /* The enhancements (render scale, present filter, fullscreen, pacing):
  * config.default.toml beside the executable, config/config.toml over it,
- * the environment over both, every key stock by default. The user root is
- * the working directory: a developer runs from the repository root, as
- * "Burnout 3 Takedown" and saves/ already assume, so their choices live in
- * the gitignored config/config.toml and no source path is baked into the
- * binary; a bundle's launcher names the file with RECOMP_CONFIG, so there
+ * the environment over both, every key stock by default but pacing
+ * (below). The user root is the working directory: a developer runs from
+ * the repository root, as "Burnout 3 Takedown" and saves/ already assume,
+ * so their choices live in the gitignored config/config.toml and no source
+ * path is baked into the binary; a bundle's launcher names the file with RECOMP_CONFIG, so there
  * the root is never used. Before the guest and the window, so the backends
  * and the presenter read settled values. Burnout 3 has no keys of its own
  * yet: any it gains are read between the two calls, so a file that sets one
@@ -885,6 +885,17 @@ static void record_start(const char *out)
 static void host_enhance_init(void)
 {
 #ifdef RECOMP_ENV_HAVE_ENHANCE_KEYS
+#ifdef _WIN32
+    /* present.pacing defaults to spin in the Windows build, under Proton
+     * too, and to sleep elsewhere (the toolkit's default), as BLiNX 2's: on
+     * native Windows 11 sleep let some of its NtReadFile calls take
+     * 100-675 ms and once froze a stage for 424 ms, where spin stayed under
+     * 34 ms (the user, 2026-11-05, for Burnout 3 in the tracker item). It is
+     * the code default: the environment, config/config.toml and
+     * config.default.toml still win (so config.default.toml leaves the key
+     * out), and the in-game menu takes it as the stock value. */
+    enhance_cfg_set_code_default("present.pacing", "spin");
+#endif
     xbox_enhance_init(".", NULL);
     enhance_cfg_report_unused();
     fflush(stderr);

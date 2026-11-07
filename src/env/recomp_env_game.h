@@ -11,9 +11,12 @@
  *               signals; without vblank delivery the boot stops after flip 1.
  *               paced: the 60 Hz schedule with the KickOff ack watch; since
  *               the toolkit's v0.16 sync "1" is upstream's plain tick.
- *   GUEST_CPUS  one: every guest thread on one host core, as on the console
- *               (the toolkit's default since v0.16 is every core, as
- *               upstream's). RECOMP_GUEST_CPUS=all is the A/B.
+ *   GUEST_CPUS  left at the toolkit's default, every core, as upstream's
+ *               (the user, 2026-11-05, as BLiNX 2 in the tracker item). The game set
+ *               "one" (as on the console) from BLiNX 2's default when the
+ *               toolkit went title-neutral, never for a race of its own; on
+ *               native Windows the pin starved BLiNX 2's movie-audio
+ *               workers on the one core. RECOMP_GUEST_CPUS=one is the A/B.
  *   DISPATCH_GATE  1: the one-CPU DISPATCH gate, so device interrupts and
  *               queued DPCs run at the guest holder's safe points and never
  *               beside its guest code, as on the console's one CPU.
@@ -55,13 +58,12 @@
 #define RECOMP_ENV_GAME_KEYS(X)
 #endif
 
-/* GUEST_CPUS, DISPATCH_GATE and FLIP_PACING are toolkit rows since its
- * v0.16 sync (which also defines RECOMP_ENV_HAVE_RUMBLE_ROW); a toolkit
- * before it has none of them and already runs this way, so they are left
- * out there. Drop the guard once the pin is past that merge. */
+/* DISPATCH_GATE and FLIP_PACING are toolkit rows since its v0.16 sync
+ * (which also defines RECOMP_ENV_HAVE_RUMBLE_ROW); a toolkit before it has
+ * neither and already runs this way, so they are left out there. Drop the
+ * guard once the pin is past that merge. */
 #ifdef RECOMP_ENV_HAVE_RUMBLE_ROW
 #define B3_ENV_ONE_CPU_DEFAULTS(D) \
-    D(GUEST_CPUS,    "one") \
     D(DISPATCH_GATE, "1") \
     D(FLIP_PACING,   "1")
 #else

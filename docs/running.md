@@ -122,8 +122,10 @@ For debugging:
 ## Options (`config.default.toml`, `config.toml`)
 
 The fork toolkit's enhancements layer is built in (`XBOXRECOMP_ENHANCE`,
-on in `CMakeLists.txt`), and every key in it is stock unless something sets it,
-but for `present.pacing`, which defaults to `sleep`.
+on in `CMakeLists.txt`), and every key in it is stock unless something sets it.
+The Windows build (natively and under Proton) keeps the stock `spin` for
+`present.pacing`; the one exception is every non-Windows build (macOS), which
+defaults it to `sleep`.
 The options live in two files. `config.default.toml` sits beside the
 executable (in `Contents/Resources/` in the macOS app; the build copies
 `packaging/config.default.toml` there) and lists every key at its
@@ -150,7 +152,7 @@ in the layer.
 | `display.aspect` | `RECOMP_DISPLAY_ASPECT` | `4:3` (stock; the only ratio this toolkit pin supports) | `4:3` |
 | `present.filter` | `RECOMP_PRESENT_FILTER` | `nearest`, `linear`, `integer` | `nearest` |
 | `present.fullscreen` | `RECOMP_PRESENT_FULLSCREEN` | borderless desktop fullscreen at start: `true`/`false` in the file, `1`/`0` in the variable | `false` (`0`) |
-| `present.pacing` | `RECOMP_PRESENT_PACING` | `sleep` (the lowered spin waits sleep until the kernel signals, which frees a CPU core) or `spin` (the console-original busy-wait, which holds a CPU core) | `sleep` (stock: `spin`) |
+| `present.pacing` | `RECOMP_PRESENT_PACING` | `sleep` (the lowered spin waits sleep until the kernel signals, which frees a CPU core) or `spin` (the console-original busy-wait, which holds a CPU core) | `spin` in the Windows build, `sleep` on every other build (stock: `spin`) |
 | `present.surface` | `RECOMP_PRESENT_SURFACE` | `auto` (gamescope scales the frame when the SteamOS launcher says it runs there, else the window does), `window`, `internal` | `auto` |
 | `textures.pack` | `RECOMP_TEXTURES_PACK` | a texture pack file, or `none` | `none` |
 | `textures.font` | `RECOMP_TEXTURES_FONT` | the pack's font-atlas entries, `on`/`off` | `on` |

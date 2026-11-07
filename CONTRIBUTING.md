@@ -16,7 +16,8 @@ terms. The Burnout 3 commit that needs it names the PR (`needs xboxrecomp#NN`).
 
 ## Setting up
 
-Follow the README's *Getting Started*, either route. You need your own disc
+Follow [docs/developers.md](docs/developers.md), either route: *Build from
+source* (`./burnout3`) or *Upstream's route* (Visual Studio). You need your own disc
 image. No dumps, extracted files or generated source go in issues or PRs: attach
 logs and screenshots instead.
 

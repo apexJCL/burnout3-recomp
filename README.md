@@ -1,345 +1,248 @@
-# Burnout 3: Takedown — static recompilation
+# Burnout 3: Takedown
 
+*Burnout 3: Takedown* is Criterion's 2004 racing game, where you win by
+crashing your rivals off the road. This project turns your own copy of
+the Xbox disc into a game that runs on Windows, a Mac or a Steam Deck. No
+emulator, and no disc in a drive once it is built. It is a fork of
+[sp00nznet/burnout3](https://github.com/sp00nznet/burnout3) by sp00nz.
+
+![Chasing down a takedown target through town at render scale 3, on a Mac](docs/images/hero.png)
+
+<!-- xbr:readme:download -->
 > [!TIP]
-> **The easy way:** from the first release on, download `burnout3-wizard-*`
-> for your system from the [latest release](https://github.com/apexJCL/burnout3-recomp/releases/latest),
-> point it at your own disc image, and it builds and installs the game for you
-> ([more](#play-it-the-build-wizard)). The by-hand route is under
-> [Building with ./burnout3](#building-with-burnout3-xboxrecomp-cli).
+> **Get the builder:** download the wizard for your computer from the
+> [latest release](https://github.com/apexJCL/burnout3-recomp/releases/latest),
+> point it at your own disc image, and it builds and installs the game for you.
+>
+> | Your computer | Download |
+> |---|---|
+> | Windows 10 or 11 (x86-64) | `burnout3-wizard-<version>-windows-x64.zip` |
+> | Mac (Apple silicon) | `burnout3-wizard-<version>-macos.zip` |
+> | Steam Deck or Linux PC | `burnout3-wizard-<version>-linux-x64.tar.gz` |
+<!-- /xbr:readme:download -->
 
-A static recompilation of the Xbox version of Burnout 3: Takedown (Criterion, 2004)
-into a native program for Windows, the Steam Deck and other Linux PCs (through
-Proton) and macOS. The game's own x86 code is lifted to C by the
-[xboxrecomp](https://github.com/sp00nznet/xboxrecomp) toolkit. It boots through
-its real entry point and runs its own menus, races and renderer on the toolkit's
-Xbox runtime. No game logic or screen is hand-written.
+**No game is included.** You need your own copy of Burnout 3: Takedown; everything the
+builder makes from it stays on your machines.
 
-This is [apexJCL/burnout3-recomp](https://github.com/apexJCL/burnout3-recomp), a fork of
-[sp00nznet/burnout3](https://github.com/sp00nznet/burnout3) by sp00nz, which keeps
-upstream's history and build. The fork builds the game through
-[xboxrecomp-cli](https://github.com/apexJCL/xboxrecomp-cli) against the toolkit fork
-[apexJCL/xboxrecomp](https://github.com/apexJCL/xboxrecomp), which adds Direct3D 11
-and Metal renderers, a macOS host and an options file; it publishes a build
-wizard for players in its [releases](https://github.com/apexJCL/burnout3-recomp/releases).
+<!-- xbr:readme:release -->
+> [!IMPORTANT]
+> **Supported game version.** This port is built for one release of
+> Burnout 3: Takedown only:
+>
+> | | |
+> |---|---|
+> | Title | Burnout 3 |
+> | Title ID | `0x4541005B` |
+> | Region | NTSC-U |
+> | Version | 1 |
+> | `default.xbe` sha256 | `9f497acd82adb8edfb72cc31aeeb35010b45d32b13a3f1fc6540717ff24d13f9` |
+>
+> The wizard checks your copy on its Dump page before it builds; by hand,
+> `./burnout3 fingerprint /path/to/your/disc.iso` says the same. Another
+> region or version is **not supported**: it warns "another release", and
+> the game may crash or misbehave. A modded copy warns too.
+<!-- /xbr:readme:release -->
 
-**Generated source is not distributed.** The repository holds the build glue, the
-per-title data and the docs. You supply your own disc image; the recompiler runs
-on your machine and writes the C into a gitignored folder.
+## How the builder works
 
-![Two-player split-screen race, both cars off the line](docs/screenshots/hero_splitscreen.gif)
+<!-- xbr:readme:wizard -->
+- Checks your computer and fetches the build tools it needs, each download
+  checked against a known checksum. It sends nothing of yours.
+- Checks your disc image or game folder, and says before building when it
+  is another release or a modded copy.
+- Builds an installer for this computer, or for another one: a Windows setup
+  program, a Mac app (`.dmg`) or a Steam Deck bundle that adds the game to
+  Steam.
+- Lets you pick the basic options before building:
+  - Render scale
+  - Start fullscreen
+- Makes small updates for a device that already has a build, and reuses
+  most of the work when you build again.
+<!-- /xbr:readme:wizard -->
 
-*Two-player split-screen, recorded headless with `--record`-style per-flip frames and scripted pads.*
+Step by step, with the SmartScreen and Gatekeeper prompts, and the by-hand
+route: [docs/playing.md](docs/playing.md#build-the-game).
 
-## Progress
+## Status
 
-Every game mode boots, renders and plays, one or two players, driven by a
-controller. On this fork the GPU runs on Direct3D 11 or Metal, so races run at
-full speed; on upstream's toolkit, with the NV2A emulated in software, menus run
-at about 14 fps and races at 2–4 fps.
+**Every game mode boots, renders and plays,** one or two players, with a
+controller, at full speed on Direct3D 11 and Metal. Xbox Live and System
+Link are not attempted.
 
-| You play on | Bundle | Graphics | Audio | Input | Status |
-|---|---|---|---|---|---|
-| Steam Deck (stock SteamOS), or a Linux gaming PC | `steamos` (the Windows build, run under Proton through `umu-run`) | Direct3D 11 (DXVK) | XAudio2 (FAudio) | Controller (XInput), two pads | Plays, in one window. The Deck is the regular test machine: a scripted race runs at about 57 frames a second. Fullscreen is off by default: add the game to Steam with the Gamepad template (the bundle's README says how). |
-| macOS (Apple silicon) | `macos` (`.dmg`) | Metal | SDL3 (CoreAudio) | Controller (SDL GameController) and keyboard | Plays: the same scripted race runs at about 55 frames a second. The title screen and menu music is silent. |
-| Windows x86-64 | `windows` (a setup program) | Direct3D 11 | XAudio2 | Controller (XInput), two pads | Builds and installs. On native Windows 11 it has been checked to start in one window and reach Press START; it is played and tested under Proton. |
-
-The game runs at its own frame rate and 4:3, as on the Xbox. Render scale 2 to
-4 draws it sharper on Direct3D 11 and Metal (`[render] scale` in
-`config/config.toml`, or the wizard's Render scale).
-
-This build on Metal (macOS), at render scale 1 and 2:
-
-| Scale 1 (640x480) | Scale 2 (1280x960) |
-|---|---|
-| ![Title screen at render scale 1](docs/images/title-1x.png) | ![Title screen at render scale 2](docs/images/title-2x.png) |
-| ![A race at render scale 1](docs/images/race-1x.png) | ![A race at render scale 2](docs/images/race-2x.png) |
-
-**Sister project:** [BLiNX 2 recomp](https://github.com/apexJCL/blinx2-recomp)
-([releases](https://github.com/apexJCL/blinx2-recomp/releases)), on the same
-toolkit fork and CLI; its README tracks its progress the same way.
-
-**What is published, and what never is.** This repository holds the build glue,
-the per-title data, the docs, upstream's screenshots and a few images of this
-build for this README. Game files, the code generated from them, frame dumps,
-audio captures and saves are never published, and a release carries only the
-wizard, which builds the game from your own disc on your machine.
-
-Modes, as upstream recorded them:
-
-| Mode | Players | Status |
+| You play on | Graphics | State |
 |---|---|---|
-| Race (Single Event) | 1 | plays to the finish |
-| Time Attack | 1 | plays |
-| Road Rage | 1 | plays |
-| Crash | 1 | plays: launch, pile-up, score |
-| Race | 2, split-screen | plays |
-| Road Rage | 2, split-screen | plays |
-| Double Impact | 2, split-screen | plays |
-| Team Crush | 2, split-screen | plays |
-| Party Crash | 2–8, pass the pad | plays |
-| Xbox Live / System Link | — | not attempted |
+| Windows 10 or 11 | Direct3D 11 | Builds and installs; checked to start and reach Press START on Windows 11. Played and tested under Proton. |
+| Steam Deck, Linux (Proton) | Direct3D 11 (DXVK) | Plays: a scripted race runs at about 57 frames a second on the Deck. |
+| Mac (Apple silicon) | Metal | Plays: the same race runs at about 55 frames a second. The title and menu music is silent. |
 
-Known gaps, as upstream lists them for its toolkit: vertical streaks over the menu
-backdrop movie, seams in the sky dome, bump-mapped (dot-product) texture stages
-read as zero, and no profile saving (so the tutorial video plays every launch;
-see [docs/running.md](docs/running.md)).
-[ROADMAP.md](ROADMAP.md) has the list; [docs/boot.md](docs/boot.md) has what it
-took to get here, fix by fix.
+Top known issues (all of them: [docs/playing.md](docs/playing.md#known-issues)):
 
-This is one title in the xboxrecomp family and follows its house style: the
-toolkit carries everything that isn't specific to Burnout 3, and this repo carries
-only what is.
+- The title screen and menu music is silent on the Mac.
+- No profile saving, so the tutorial video plays at every start.
+- Upstream's list for its toolkit: vertical streaks over the menu backdrop
+  movie, seams in the sky dome, and bump-mapped texture stages read as zero.
+- Xbox Live and System Link are not attempted.
+- On the Steam Deck the game starts in a window: add it to Steam with the
+  Gamepad template.
 
-## Play it: the build wizard
+## Showcase
 
-Each [release](https://github.com/apexJCL/burnout3-recomp/releases) carries a small
-program for Windows, macOS and Linux (Steam Deck included): download yours,
-point it at your own Burnout 3: Takedown disc image, pick the render scale and
-whether to start fullscreen, and it builds and installs the game for you. It runs
-the same `./burnout3` commands as [Building with ./burnout3](#building-with-burnout3-xboxrecomp-cli)
-below. Nothing from the game is downloaded: the only game data used is your disc
-image, and the build stays on your machine.
+![A takedown: a rival rolls over after a slam into the barrier, on a Mac](docs/images/race-takedown.png)
 
-On a Steam Deck the game starts in a window. In Desktop Mode, add it to Steam
-(the installer's `--steam` does this), pick the Gamepad template in its controller
-settings and start it from Steam; quit from the pad with the Steam button, then
-Exit game.
+![A Concrete Kiss on the way out of town](docs/images/race-concrete-kiss.png)
 
-## Screenshots
+![The mountain road later in the same race](docs/images/race-mountain.png)
 
-Upstream's, taken on its software renderer:
+Upstream's own screenshots, taken on its software renderer, are in
+[docs/screenshots](docs/screenshots).
 
-| | |
+### The in-game menu
+
+F10 on the keyboard (Guide+A, or Back+L3 held on a pad) opens a menu over
+the game while it keeps running. Its pages: Render (scale, aspect,
+filtering), Shaders, Mods, Stats, Controls, Saves and Files. Most settings
+apply at once; Save keeps what you changed.
+
+![The in-game menu's Render page over a race](docs/images/menu.png)
+
+### Mods and enhancements
+
+Every mod is off, or at the Xbox's setting, unless the table says
+otherwise. Open the in-game menu, go to the page in the table and change
+the option; most apply at once, and Save keeps them for the next start.
+The wizard also asks for the render scale before it builds.
+
+| Mod | Menu page | What it does | Default |
+|---|---|---|---|
+| **Render scale** | Render | Draws the 3D at 1 to 4 times the Xbox's 640x480: sharper, slower. | 1 |
+| **Aspect ratio** | Render | Widescreen: 16:9, 16:10 or 21:9 show more at the sides instead of stretching the picture (from the next start). | 4:3 |
+| **Anisotropic filtering** | Render | Sharper ground and walls seen at a slant: 2, 4, 8 or 16. | 0 |
+| **Overscan crop** | Render | Crops the border an old TV hid, and zooms the rest (4:3 only). | 0 |
+| **2D on guest grid** | Render | Keeps 2D art on the Xbox's pixel grid at render scale 2 and up, so tiled menus and HUD show no seams. | off |
+| **Scaling filter** | Render | How the picture is stretched to the window: nearest is crisp, linear smooth, integer whole multiples only. | nearest |
+| **Profile** | Shaders | A shader over the picture: crt-lottes, crt-lottes-fast or crt-hyllian for an old TV's look, fsr to upscale. | Off |
+
+#### Render scale
+
+The Xbox drew every game at 640x480. Render scale 2 draws the 3D at
+1280x960 and 3 at 1920x1440; the wizard asks for it, and Render > Render
+scale changes it while you play.
+
+![A detail of the car at render scale 1, as on the Xbox, and at render scale 3: the badge, the rear wing and the cars ahead are sharp at 3](docs/images/pair-scale.png)
+
+#### Aspect ratio
+
+Render > Aspect ratio > 16:9 keeps the game's height of view and shows
+more at the sides; it takes effect at the next start.
+
+![The car select at 4:3, as on the Xbox, and at 16:9, which shows more of the garage at the sides](docs/images/pair-aspect.png)
+
+#### Anisotropic filtering
+
+Render > Anisotropic filtering > 16 keeps a texture sharp where it runs
+away from the camera, as a road or a floor does.
+
+![The dirt road behind the car with anisotropic filtering 0, as on the Xbox, and 16: the tyre tracks in the dirt stay sharp further back at 16](docs/images/pair-aniso.png)
+
+#### Overscan crop
+
+A still shows only a zoom. Its origin: a TV of the time hid a band around
+the picture, so console games kept their HUD away from the border, and
+some left junk there. Overscan crop cuts that band and fills the window
+with the rest. It works at 4:3 only.
+
+#### 2D on guest grid
+
+Above render scale 1 the 3D gets sharper, but 2D art made of tiles (menus,
+the HUD, fonts) can show thin seams where the tiles meet, because each tile
+now samples between the Xbox's pixels. This keeps 2D on the Xbox's own
+pixel grid, as at scale 1: no seams, blockier 2D art.
+
+A still shows nothing here. Its origin: Burnout 3's menus and HUD show
+no seams at render scale 3, so their 2D art looks the same with this off
+and on. It is there for games whose tiled 2D does seam.
+
+#### Scaling filter
+
+The Xbox drew for a TV; a window is larger, so the picture is stretched to
+fit. Nearest keeps every pixel sharp, linear blends them for a softer
+picture, and integer scales by whole multiples only, with a border, so
+every pixel is the same size.
+
+![A detail of the race with the nearest filter, and with linear: the road's square pixels and the text's stepped edges blend smooth with linear](docs/images/pair-filter.png)
+
+#### Profile
+
+Shaders > Profile > crt-lottes draws the picture like an old TV, with
+scanlines and a shadow mask; crt-hyllian is another look, and fsr is
+AMD's upscaler instead. The Shaders page tunes each one, and saves a chain
+of them as a profile of your own.
+
+## Build requirements and common gotchas
+
+- About 15 GB free for the build, plus room for the installer.
+- A Windows 10 or 11 PC, an Apple silicon Mac, or a Steam Deck or Linux PC
+  (in Desktop Mode on the Deck).
+- An internet connection for the first build (the tools download once).
+- Your copy is the supported version (the box above).
+
+The failures players hit most:
+
+- **"Another release":** your disc is another region or revision than the
+  one this port is made from. The build may stop, or the game misbehave.
+- **Mac: "the app is damaged" or cannot be opened:** that is Gatekeeper.
+  Right-click the app and pick Open, once.
+- **Steam Deck: the game starts in a window, and the pad does not reach
+  it:** in Desktop Mode add it to Steam (`./install.sh --steam`), pick the
+  Gamepad template in its controller settings and start it from Steam.
+
+The rest: [docs/playing.md](docs/playing.md#troubleshooting).
+
+## Report a bug
+
+[Open a bug report](https://github.com/apexJCL/burnout3-recomp/issues/new?template=bug_report.yml):
+the form asks for what we need (your game version, the build version, where
+you play, your settings and the logs). Never attach game files, a disc
+image, a save or a built bundle. Problems with the wizard or the `./burnout3`
+commands themselves go to
+[xboxrecomp-cli's issues](https://github.com/apexJCL/xboxrecomp-cli/issues).
+
+## More documentation
+
+| Document | For |
 |---|---|
-| ![Takedown](docs/screenshots/hero_takedown.gif) | ![Single race](docs/screenshots/hero_race.gif) |
-| A takedown: slam a rival into a pillar | A single race, off the line |
-| ![Crash mode pile-up](docs/screenshots/crash_pileup.png) | ![Race](docs/screenshots/race_single_event.png) |
-| Crash mode: the junction pile-up | Race |
-| ![Road Rage](docs/screenshots/road_rage.png) | ![Double Impact](docs/screenshots/double_impact.png) |
-| Road Rage | Double Impact (2P) |
-| ![Crash result](docs/screenshots/crash_result.png) | ![Time Attack](docs/screenshots/time_attack.png) |
-| Crash mode scoring | Time Attack |
-| ![Garage](docs/screenshots/garage_3d.png) | ![Crash map](docs/screenshots/crashnav_map.png) |
-| Vehicle select | Crash junction map |
+| [docs/playing.md](docs/playing.md) | building by hand, installing, the options, the in-game menu, known issues, troubleshooting |
+| [docs/developers.md](docs/developers.md) | how the port works, building from source, the toolchain and its pins, contributing |
+| [CHANGELOG.md](CHANGELOG.md) | what changed for players in each release |
 
-More in [docs/screenshots](docs/screenshots).
+**Sister project.** [BLiNX 2: Masters of Time & Space](https://github.com/apexJCL/blinx2-recomp)
+is recompiled with the same toolkit and build wizard, and is the furthest along.
 
-## Getting Started
+## Legal
 
-Upstream's route: Windows with Visual Studio 2022 and upstream's toolkit,
-unchanged in this fork. You need:
+This repository contains **no game data and no game code**: no game files,
+assets or saves, and no lifted (recompiled) game code. `src/game/recomp/gen/` is
+generated on your machine by the pipeline and is never committed.
 
-- Windows 10 or 11, x64, with about 12 GB free
-- your own Burnout 3: Takedown disc image (`.iso`)
-- an Xbox or XInput controller (two for split-screen); there is no keyboard mapping
+To build it you need your own legally obtained copy of Burnout 3: Takedown. Burnout 3: Takedown and its assets belong to their owners; this project
+is not affiliated with them.
+A bundle made by `burnout3 package` contains your copy of the game and code
+generated from it: it is for your own machines only, and is not yours to
+redistribute.
 
-### Quick start
-
-1. Download this repository (green **Code** button, **Download ZIP**) and unzip it
-   somewhere with space, for example `C:\recomp\burnout3`.
-2. Double-click **`Setup.cmd`**.
-
-   It checks for Python 3.10+, the capstone package, Git, CMake and the Visual
-   Studio 2022 C++ build tools, and asks before installing any that are missing
-   (with winget), saying what each is and how big. It fetches the xboxrecomp
-   toolkit beside the repo folder, then asks for your `.iso` (it looks next to the
-   repo and in Downloads first). After that it unpacks the disc, regenerates the C
-   and builds.
-
-   Each step is skipped once done, so after a failure just run it again. What went
-   wrong goes in `setup.log`, and the window says what to do next.
-3. Double-click **`Play Burnout 3.cmd`**, which the setup leaves in the repo folder.
-
-The first build takes 20–40 minutes. Nothing from the game is downloaded or
-bundled: the only game data used is your disc image.
-
-### Step by step
-
-The same steps as `Setup.cmd`, by hand. Commands are for PowerShell, except where
-the step says Git Bash.
-
-1. **Install the prerequisites.**
-
-   | Tool | Version | Get it |
-   |---|---|---|
-   | Python | 3.10 or newer, with the `py` launcher | `winget install -e --id Python.Python.3.12` |
-   | capstone | 5.x | `py -3 -m pip install --user capstone` |
-   | Git for Windows | any recent, which includes Git Bash | `winget install -e --id Git.Git` |
-   | CMake | 3.20 or newer | `winget install -e --id Kitware.CMake` |
-   | Visual Studio 2022 | Build Tools with *Desktop development with C++* | `winget install -e --id Microsoft.VisualStudio.2022.BuildTools` |
-   | ffmpeg | optional, for `--record` | `winget install -e --id Gyan.FFmpeg` |
-
-   Open a **new** terminal afterwards so PATH picks them up. If `python` opens the
-   Microsoft Store, that's the Store alias; use `py -3` as below, or turn the alias
-   off under *Settings → Apps → Advanced app settings → App execution aliases*.
-
-   ```
-   > py -3 --version
-   Python 3.12.10
-   > cmake --version
-   cmake version 3.31.6
-   ```
-
-2. **Put the repo and the toolkit side by side.** The build looks for the toolkit at
-   `..\xboxrecomp`.
-
-   ```
-   git clone https://github.com/sp00nznet/burnout3
-   git clone https://github.com/sp00nznet/xboxrecomp
-   ```
-
-   The toolkit's `main` has everything Burnout 3 needs (xboxrecomp #138-#156).
-
-3. **Unpack your disc image** into `burnout3\Burnout 3 Takedown\`, using the
-   toolkit's XDVDFS reader:
-
-   ```
-   cd xboxrecomp
-   py -3 -m tools.xiso unpack "D:\isos\Burnout 3 - Takedown (USA).iso" -o "..\burnout3\Burnout 3 Takedown"
-   cd ..\burnout3
-   ```
-
-   You should end up with `Burnout 3 Takedown\default.xbe` next to `Data\`,
-   `Tracks\`, `ovid\` and the rest (about 2.4 GB).
-
-4. **Regenerate the C** (Git Bash, from the `burnout3` folder):
-
-   ```
-   $ ./regen.sh --disasm
-   ==> xbe_parser
-   ==> disasm
-   ==> func_id
-   ==> abi_analysis
-   ==> recomp
-   ==> done. Now: cmake --build build-xr --config Release
-   ```
-
-   This writes `src/game/recomp/gen/`, about 29 files, all gitignored.
-
-5. **Build** (PowerShell or Git Bash):
-
-   ```
-   cmake -S . -B build-xr -G "Visual Studio 17 2022" -A x64
-   cmake --build build-xr --config Release --parallel 2
-   ```
-
-   It ends with `burnout3.vcxproj -> ...\burnout3\bin\burnout3.exe`. `--parallel 2`
-   together with the default `/MP` (half your cores) keeps the machine usable while
-   it compiles. Each generated file is large at `/O2`.
-
-6. **Run** it from the repo folder, so it finds `Burnout 3 Takedown\` and `saves\`:
-
-   ```
-   .\bin\burnout3.exe
-   ```
-
-   A window opens titled `Burnout 3: Takedown | FPS: n | draws: n`, and you see the
-   EA and Criterion intros, then "Press START".
-
-**Usual trip-ups:** `regen.sh` needs Git Bash, not WSL's `bash`. A tool installed a
-moment ago isn't found until you open a new window. The build needs the
-64-bit generator (`-A x64`).
-
-### Building with ./burnout3 (xboxrecomp-cli)
-
-This fork also builds through
-[xboxrecomp-cli](https://github.com/apexJCL/xboxrecomp-cli), the command line
-the [BLiNX 2 recomp](https://github.com/apexJCL/blinx2-recomp) uses. It is the
-path this fork tests: a Windows x86-64 exe cross-compiled with llvm-mingw
-(from macOS or Linux as well as Windows) and run under Proton on Linux, and a
-native macOS build on Metal, against the toolkit fork (`apexJCL/xboxrecomp`) at
-the commit `game.toml` pins. Upstream's `Setup.cmd`, `regen.sh` and Visual
-Studio build above are unchanged.
-
-You need [uv](https://docs.astral.sh/uv/), git and Python 3. `./burnout3`
-(`burnout3.cmd` on Windows) finds or clones the CLI at its pinned commit and
-runs it; `game.toml` holds everything it knows about this game.
-
-```
-./burnout3 setup        # the tools venv (.venv), llvm-mingw, the toolkit at its pin
-./burnout3 doctor       # what this host has
-./burnout3 analyze      # xbe_parser, disasm, func_id, abi_analysis -> build/xr/
-./burnout3 recomp       # the C, into src/game/recomp/gen/ (the same files regen.sh writes)
-./burnout3 build        # build-win/burnout3.exe; `build macos` on a Mac: build/burnout3
-./burnout3 bench ...    # build and run it under Proton on a Linux host (docs/running.md)
-./burnout3 package windows   # dist/: an installer folder for Windows
-./burnout3 package steamos   # dist/: one .tar for a SteamOS-like Linux PC (Proton through umu-run)
-./burnout3 package macos     # dist/: a .dmg with Burnout3Takedown.app (on a Mac)
-./burnout3 wizard build --dev   # the player wizard from this tree (docs: the CLI's docs/wizard.md)
-```
-
-The disc is read from `Burnout 3 Takedown/`, as above; nothing is written
-into it. A `../xboxrecomp` checkout beside this one is used as it is
-(`XBOXRECOMP_DIR` names another), like a `../xboxrecomp-cli` checkout for the
-CLI (`XBOXRECOMP_CLI_DIR`).
-
-`./burnout3 package` (with no target: `windows`) builds a stock exe in its own
-`build-pkg-win/` and wraps it with a launcher, your game files and a README
-into a private bundle in `dist/`. The bundle holds your copy of the game:
-it is for your own machines, never to share. The launcher renders through
-Direct3D 11 (`RECOMP_PB_BACKEND=d3d11`); settings and saves live outside the
-program, in `%LOCALAPPDATA%\Burnout3Takedown` on Windows and
-`~/Games/Burnout3Takedown` on Linux, and survive updates. The bundle's
-`README.txt` has the install steps.
-
-## Usage
-
-```
-bin\burnout3.exe [--headless] [--record out.mp4] [--seconds N] [path\to\default.xbe]
-```
-
-| Invocation | What it does |
-|---|---|
-| `burnout3.exe` | Plays in a window. Pad 1 and pad 2 are XInput pads 1 and 2. |
-| `burnout3.exe --headless` | Runs with no window, for scripts and remote sessions. |
-| `burnout3.exe --headless --record out.mp4 --seconds 600` | Runs for 10 minutes with no window, then encodes every presented frame to `out.mp4` (needs `ffmpeg` on PATH). Ctrl+C also stops and encodes. |
-
-Scripted input, for recording or testing without a pad in hand:
-
-```
-set RECOMP_PAD_SCRIPT=20000:start:1200,30000:a:400,90000:rt:60000,90000:p2-rt:60000
-bin\burnout3.exe --headless --record race.mp4 --seconds 900
-```
-
-Each entry is `<ms>:<button>[+<button>][:<hold ms>]`, timed from when the game first
-reads the pad, and a `p2-` prefix sends it to the second pad. `RECOMP_PAD_LIVE=pad.txt` instead reads steps appended to a file while the
-game runs. [docs/running.md](docs/running.md) lists the buttons, the environment
-variables and the capture tools.
-
-The emulated hard disk lives in `saves\`. Delete it to see the first-boot flow
-(profile creation) again.
-
-## Building from source
-
-`regen.sh` runs the toolkit's pipeline on `default.xbe`. The stages are XBE parser,
-disassembler, library-function identification, ABI analysis and the recompiler.
-CMake then builds the generated C against the xboxrecomp runtime. That runtime
-supplies the Xbox kernel, a software NV2A GPU, the MCPX audio processor, a USB
-OHCI host with emulated pads, and the XMV movie player. See
-[docs/architecture.md](docs/architecture.md) for which part owns what.
-
-The C is regenerated, not edited. If the output is wrong, the fix goes in the
-toolkit's recompiler or in this repo's per-title data
-(`config/seed_functions.json`, `src/game/main.c`), never by hand in `gen/`.
-
-The exe is a Windows GUI-subsystem program, so it opens no console window
-beside the game. Started from a terminal, `cmd` no longer waits for it and
-its output goes nowhere: set `RECOMP_STDIO_LOG=<file>` (fork toolkit) to keep
-the log, or configure with `-DBO3_CONSOLE=ON` to build the console program,
-which prints to the terminal as before (needed for Ctrl+C to stop a
-`--record` run).
-
-## Contributors
-
-See [CONTRIBUTORS.md](CONTRIBUTORS.md). Contributions are welcome; read
-[CONTRIBUTING.md](CONTRIBUTING.md) first, especially *Where your code comes from*.
-
-## License
+### License and credits
 
 MIT, see [LICENSE](LICENSE). This covers the code in this repository only.
-Burnout 3: Takedown and its assets belong to their owners and are not included.
-No game files, code generated from them, frame dumps, audio captures or saves
-are published here or in a release; the wizard and `./burnout3 package` build
-from your own disc on your machine, and a bundle holds your copy of the game:
-it is for your own machines, never to share. This project is not affiliated
-with the game's owners.
+Contributions are welcome; read [CONTRIBUTING.md](CONTRIBUTING.md) first,
+especially *Where your code comes from*. The toolkit that the
+build links in statically carries LGPL-2.1 APU code extracted from xemu: if
+you distribute a built binary, read [NOTICE](NOTICE) first.
+
+Built on [xboxrecomp](https://github.com/sp00nznet/xboxrecomp) by sp00nz,
+through the [apexJCL/xboxrecomp](https://github.com/apexJCL/xboxrecomp) fork, and on
+[xboxrecomp-cli](https://github.com/apexJCL/xboxrecomp-cli). 
+This is [apexJCL/burnout3-recomp](https://github.com/apexJCL/burnout3-recomp),
+a fork of [sp00nznet/burnout3](https://github.com/sp00nznet/burnout3) by
+sp00nz, which keeps upstream's history and build; its Windows route with
+Visual Studio is in [docs/developers.md](docs/developers.md#upstreams-route-windows-and-visual-studio).
+Contributors: [CONTRIBUTORS.md](CONTRIBUTORS.md).

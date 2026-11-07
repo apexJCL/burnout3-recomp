@@ -10,6 +10,18 @@ the tagged commit has none.
 
 ## [Unreleased]
 
+### For developers
+
+- **Pins:** xboxrecomp-cli v0.22.0 and toolkit blinx2-v0.15.0, up from
+  v0.21.0 and blinx2-v0.14.0.
+- **Present shaders come from the toolkit:** blinx2-v0.15.0 stages
+  librashader and the `shaders/` presets beside every exe that links the
+  enhancements layer, so the game's own `xboxrecomp_present_shaders` call
+  is gone.
+- **A key that waited for the pin:** `[enhance.textures]` builds the
+  texture pack from the dump for `burnout3 enhance textures`; v0.21.0
+  refused the table.
+
 ## [2026.11.2] - 2026-11-04
 
 **The menu is readable on the Deck.**
